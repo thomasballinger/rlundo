@@ -1,3 +1,5 @@
-undoable: undoable.c myreadline.c
-	gcc -Wall -fPIC -shared -o mylibreadline.so myreadline.c -ldl
-	gcc undoable.c -o undoable
+all: librlundoable rlundo
+librlundoable: rlundoable.c
+	gcc -Wall -fPIC -shared -o librlundoable.so rlundoable.c -ldl
+rlundo: rlundo.c
+	gcc rlundo.c -o rlundo
