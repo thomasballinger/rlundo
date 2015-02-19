@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
 
   char **env = malloc(3 * sizeof(char *));
   env[0] = malloc(100 * sizeof(char));
-  sprintf(env[0], "LD_PRELOAD=./libreadline.so:/lib/x86_64-linux-gnu/libtinfo.so.5");
+  sprintf(env[0], "LD_PRELOAD=./mylibreadline.so");
 
   env[1] = NULL;
 
