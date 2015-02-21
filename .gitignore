@@ -1,0 +1,10 @@
+# for not you're supposed to link to the right Makefile
+Makefile 
+
+*.dSYM
+*.o
+*.so
+*.dylib
+*.out
+rlundo
+testrlundoable

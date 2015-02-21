@@ -1,10 +1,10 @@
-all: librlundoable rlundo test
-librlundoable: rlundoable.c
+all: rlundo test
+librlundoable.dylib: rlundoable.c
 	gcc -c rlundoable.c
 	gcc -dynamiclib -current_version 1.0 rlundoable.o -o librlundoable.dylib
 	gcc rlundoable.c -lreadline -o testrlundoable
-rlundo: rlundo.c 
+rlundo: rlundo.c librlundoable.dylib
 	gcc rlundo.c -o rlundo
-test.out: test.c rlunduable
+test: test.c librlundoable.dylib
 	gcc -c test.c
-	gcc -v test.o ./librlundoable.dylib -o test.out
+	gcc -v test.o -lreadline -o test.out
