@@ -72,7 +72,12 @@ char* readline(const char *prompt){
   } else { // parent
     int status;
     waitpid(pid, &status, 0);
-    int exitstatus = WEXITSTATUS(status);
+    int exitstatus = -1;
+    if (WIFEXITED(status)){
+      exitstatus = WEXITSTATUS(status);
+    } else {
+      exitstatus = 1; // didn't terminate normally
+    }
 
     if(exitstatus == 42){
       return readline(prompt);
