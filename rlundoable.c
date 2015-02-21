@@ -17,6 +17,26 @@
 
 static char *top_undo_message = "with no command, so exiting";
 static char *last_command;
+static char *(*original_readline)(const char*) = NULL;
+
+static char* (*get_original_readline())(const char*){
+  char *(*orig_readline)(const char*) = NULL;
+  #ifdef __APPLE__
+    void* readline_lib = dlopen("/usr/local/opt/readline/lib/libreadline.6.dylib", RTLD_LOCAL);
+    if (dlerror()){
+      printf("dl error: %s\n", dlerror());
+      exit(0);
+    }
+    orig_readline = dlsym(readline_lib, "readline");
+    if (dlerror()){
+      printf("dl error: %s\n", dlerror());
+      exit(0);
+    }
+  #else 
+    orig_readline = dlsym(RTLD_NEXT, "readline");
+  #endif
+    return orig_readline;
+}
 
 /* Read a line of input.  Prompt with PROMPT.  An empty PROMPT means
    none.  A return value of NULL means that EOF was encountered. */
@@ -29,18 +49,8 @@ char* readline(const char *prompt){
     strcpy(last_command, top_undo_message);
   }
 
-  char *(*original_readline)(const char*) = NULL;
   if (!original_readline){
-    void* readline_lib = dlopen("/usr/local/opt/readline/lib/libreadline.6.dylib", RTLD_LOCAL);
-    if (dlerror()){
-      printf("dl error: %s\n", dlerror());
-      exit(0);
-    }
-    original_readline = dlsym(readline_lib, "readline");
-    if (dlerror()){
-      printf("dl error: %s\n", dlerror());
-      exit(0);
-    }
+    original_readline = get_original_readline();
   }
 
   value = (*original_readline)(prompt);

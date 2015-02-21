@@ -13,7 +13,6 @@ int main(int argc, char **argv) {
   }
   // TODO: allow names without paths
 
-  printf("mallocing some junk\n");
   char **env = malloc(3 * sizeof(char *));
 #ifdef __APPLE__
   env[0] = malloc(100 * sizeof(char));
@@ -26,7 +25,6 @@ int main(int argc, char **argv) {
   sprintf(env[0], "LD_PRELOAD=./librlundoable.so");
   env[1] = NULL;
 #endif
-  printf("done mallocing some junk\n");
 
   execve(argv[1], argv + 1, env);    /* Note that exec() will not return on success. */
   perror("exec() failed");
