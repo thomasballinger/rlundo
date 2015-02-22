@@ -20,3 +20,10 @@ It's currently hardcoded to try to load readline from
     /usr/local/opt/readline/lib/libreadline.6.dylib
 
 which happens to be where brew puts it on my computer.
+
+
+
+Works with
+* irb
+
+By setting new library path directores, we could get racket to work
