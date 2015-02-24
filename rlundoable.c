@@ -1,3 +1,8 @@
+/* 
+ * A version of readline function that intercepts
+ * calls to it and forks.
+*/
+
 #define _GNU_SOURCE
 
 #include <stdlib.h>

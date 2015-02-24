@@ -1,3 +1,8 @@
+/*
+ * Runs its arguments, in an environment such that rlundoable's readline
+ * will be used instead of normal readline
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

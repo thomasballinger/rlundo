@@ -1,4 +1,4 @@
-get undo in any interactive command line tool that uses readline! (and dynamically links to is in a way this program can intercept)
+get undo in any interactive command line tool that uses readline! (and dynamically links to it in a way this program can intercept)
 
     $ make -f Makefilelinux
     $ ./undoable /usr/bin/irb

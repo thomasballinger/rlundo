@@ -1,16 +1,18 @@
+/*
+ * An standin program that uses readline.
+ *
+ * To use this to test, somehow get this executable to load
+ * the rlundoable.so/rlundoable.so instead of normal readline.
+ * like LD_PRELOAD for linux
+ * or DLYD_INSERT_LIBRARIES and DYLD_FORCE_FLAT_NAMESPACE on osx
+*/
+
 #include<stdlib.h>
 #include<stdio.h>
 #include<readline/readline.h>
 #include<readline/history.h>
 #include<dlfcn.h>
 
-
-/*
- * To use this to test, somehow get this executable to load
- * the rlundoable.so/rlundoable.so instead of normal readline.
- * LD_PRELOAD for linux
- * DLYD_INSERT_LIBRARIES and DYLD_FORCE_FLAT_NAMESPACE on osx
-*/
 
 int main(){
    printf("starting main\n");
