@@ -1,0 +1,58 @@
+diff --git a/libreadline.a b/libreadline.a
+index 904a7ab..6c0aec9 100644
+Binary files a/libreadline.a and b/libreadline.a differ
+diff --git a/readline.c b/readline.c
+index 3550b35..8c0a221 100644
+--- a/readline.c
++++ b/readline.c
+@@ -301,7 +301,7 @@ rl_set_prompt (prompt)
+ /* Read a line of input.  Prompt with PROMPT.  An empty PROMPT means
+    none.  A return value of NULL means that EOF was encountered. */
+ char *
+-readline (prompt)
++actual_readline (prompt)
+      const char *prompt;
+ {
+   char *value;
+@@ -351,6 +351,38 @@ readline (prompt)
+   return (value);
+ }
+ 
++char * last_command = "with no command, so exiting";
++
++char *
++readline (prompt)
++     const char *prompt;
++{
++  char *value;
++
++  value = actual_readline(prompt);
++  if(!strcmp(value, "undo")){
++    printf("undoing '%s'\n", last_command);
++    exit(42);
++  }
++	pid_t pid = fork();
++
++  if (pid == 0) {
++    last_command = value;
++    return value;
++  } else {
++    int status;
++    waitpid(pid, &status, 0);
++    int exitstatus = WEXITSTATUS(status);
++
++    if(exitstatus == 42){
++      return readline(prompt);
++    } else {
++      exit(exitstatus);
++    }
++  }
++}
++
++
+ #if defined (READLINE_CALLBACKS)
+ #  define STATIC_CALLBACK
+ #else
+diff --git a/shlib/libreadline.so.6.0 b/shlib/libreadline.so.6.0
+index f6058b4..9da9c4b 100755
+Binary files a/shlib/libreadline.so.6.0 and b/shlib/libreadline.so.6.0 differ

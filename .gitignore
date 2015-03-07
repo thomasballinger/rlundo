@@ -7,4 +7,5 @@ Makefile
 *.dylib
 *.out
 rlundo
+rlundolibpath
 testrlundoable

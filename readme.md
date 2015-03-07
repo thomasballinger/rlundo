@@ -24,6 +24,7 @@ which happens to be where brew puts it on my computer.
 
 
 Works with
-* irb
+* irb (try ./rlundo /usr/bin/irb)
+* 
 
 By setting new library path directores, we could get racket to work

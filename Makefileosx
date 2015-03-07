@@ -1,10 +1,27 @@
-all: rlundo test.out
+all: rlundo test.out rlundolibpath libreadline.6.3.dylib libreadline.5.dylib
 librlundoable.dylib: rlundoable.c
 	gcc -c rlundoable.c
 	gcc -dynamiclib -current_version 1.0 rlundoable.o -o librlundoable.dylib
 	gcc rlundoable.c -lreadline -o testrlundoable
 rlundo: rlundo.c librlundoable.dylib
 	gcc rlundo.c -o rlundo
+rlundolibpath: rlundolibpath.c librlundoable.dylib
+	gcc rlundolibpath.c -o rlundolibpath
 test.out: test.c librlundoable.dylib
 	gcc -c test.c
 	gcc -v test.o -lreadline -o test.out
+
+readline-6.3:
+	ftp 'ftp://ftp.cwru.edu/pub/bash/readline-6.3.tar.gz'
+	tar xzvf readline-6.3.tar.gz
+	rm readline-6.3.tar.gz
+libreadline.6.3.dylib: readline-6.3
+	patch readline-6.3/readline.c readline.diff
+	cd readline-6.3; ./configure; make
+	cp readline-6.3/shlib/libreadline.6.3.dylib libreadline.6.3.dylib
+
+# other things to call libreadline.dylib
+libreadline.5.dylib: libreadline.6.3.dylib
+	ln -s libreadline.6.3.dylib libreadline.5.dylib
+libedit.3.dylib: libreadline.6.3.dylib
+	ln -s libreadline.6.3.dylib libedit.3.dylib
