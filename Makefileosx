@@ -15,8 +15,8 @@ readline-6.3:
 	ftp 'ftp://ftp.cwru.edu/pub/bash/readline-6.3.tar.gz'
 	tar xzvf readline-6.3.tar.gz
 	rm readline-6.3.tar.gz
-libreadline.6.3.dylib: readline-6.3
 	patch readline-6.3/readline.c readline.diff
+libreadline.6.3.dylib: readline-6.3
 	cd readline-6.3; ./configure; make
 	cp readline-6.3/shlib/libreadline.6.3.dylib libreadline.6.3.dylib
 

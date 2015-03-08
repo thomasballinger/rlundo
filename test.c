@@ -17,14 +17,12 @@
 
 
 int main(){
-   printf("starting main\n");
    char* line;
 
    //char *(*original_readline)(const char*) = NULL;
    //original_readline = dlsym(RTLD_NEXT, "readline");
    //printf("here's the original_readline: %d\n", (int)original_readline);
 
-   printf("about to call readline\n");
    const char* prompt = "enter a string: ";
    line = readline(prompt);  // readline allocates space for returned string
    printf("done calling readline\n");
