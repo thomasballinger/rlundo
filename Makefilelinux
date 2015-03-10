@@ -1,4 +1,4 @@
-all: rlundo test.out libreadline.so.6.3 libreadline.so.5 rlundopatched
+all: rlundo test.out libreadline.so.6.3 libreadline.so.5 libreadline.so.6 rlundopatched
 librlundoable.so: rlundoable.c
 	gcc -Wall -fPIC -shared -o librlundoable.so rlundoable.c -ldl
 rlundo: rlundo.c librlundoable.so
@@ -27,6 +27,8 @@ rlundopatched: rlundopatched.c libreadline.so.6.3
 # other things to call libreadline.dylib
 libreadline.so.5: libreadline.so.6.3
 	ln -s libreadline.so.6.3 libreadline.so.5
+libreadline.so.6: libreadline.so.6.3
+	ln -s libreadline.so.6.3 libreadline.so.6
 
 # not included in make all - rebuild the diff based on edits to modified
 refresh-diff: readline-6.3 modified-readline-6.3

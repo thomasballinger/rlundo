@@ -20,9 +20,7 @@ int main(int argc, char **argv) {
   #ifdef __APPLE__
    WHOOPS not implemented
   #else
-    putenv("LD_PRELOAD=./librlundoable.so:\
-           ./libreadline.so.6.3:\
-           /lib/x86_64-linux-gnu/libtinfo.so.5");
+    putenv("LD_PRELOAD=./libreadline.so.6.3:/lib/x86_64-linux-gnu/libtinfo.so.5");
   #endif
 
   execv(argv[1], argv + 1);    /* Note that exec() will not return on success. */
