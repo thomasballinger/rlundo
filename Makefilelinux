@@ -1,8 +1,33 @@
-all: rlundo test
+all: rlundo test.out libreadline.so.6.3 libreadline.so.5 rlundopatched
 librlundoable.so: rlundoable.c
 	gcc -Wall -fPIC -shared -o librlundoable.so rlundoable.c -ldl
 rlundo: rlundo.c librlundoable.so
 	gcc rlundo.c -o rlundo
-test: test.c librlundoable.so
+rlundolibpath: rlundolibpath.c librlundoable.so
+	gcc rlundolibpath.c -o rlundolibpath
+test.out: test.c librlundoable.so
 	gcc -c test.c
 	gcc -v test.o -lreadline -o test.out
+
+# creating patched readline
+readline-6.3:
+	wget 'ftp://ftp.cwru.edu/pub/bash/readline-6.3.tar.gz'
+	tar xzvf readline-6.3.tar.gz
+modified-readline-6.3: readline.diff readline-6.3
+	rm -rf modified-readline-6.3
+	cp -r readline-6.3 modified-readline-6.3
+	patch modified-readline-6.3/readline.c readline.diff
+	cd modified-readline-6.3; ./configure
+libreadline.so.6.3: modified-readline-6.3
+	cd modified-readline-6.3; make
+	cp modified-readline-6.3/shlib/libreadline.so.6.3 libreadline.so.6.3
+rlundopatched: rlundopatched.c libreadline.so.6.3
+	gcc rlundopatched.c -o rlundopatched
+
+# other things to call libreadline.dylib
+libreadline.so.5: libreadline.so.6.3
+	ln -s libreadline.so.6.3 libreadline.so.5
+
+# not included in make all - rebuild the diff based on edits to modified
+refresh-diff: readline-6.3 modified-readline-6.3
+	diff readline-6.3/readline.c modified-readline-6.3/readline.c > readline.diff

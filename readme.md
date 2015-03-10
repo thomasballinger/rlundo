@@ -28,6 +28,29 @@ I can get `irb` to work on linux and OSX with
     irb(main):001:0> a
     NameError: undefined local variable or method `a' for main:Object
 
+racket
+------
+
+Racket is working for me on linux, but not osx where weird things seem to happen.
+
+    $ make -f Makefilelinux rlundopatched
+    gcc rlundopatched.c -o rlundopatched
+    echo '(require readline)' > ~/.racketrc
+    $ ./rlundopatched /usr/bin/racket -il readline
+    Welcome to Racket v5.3.6.
+    > (define a 1)
+    > undo
+    undoing '(define a 1)'
+    > a
+    a: undefined;
+    cannot reference undefined identifier
+    context...:
+    /usr/share/racket/collects/racket/private/misc.rkt:87:7
+
+Racket bugs:
+* there seems to be an extra readline call that happens at startup?
+* doesn't exit cleanly
+
 ##Techniques for creating the substitute readline function
 
 ###Proxying readline calls to your system readline (function interposition)

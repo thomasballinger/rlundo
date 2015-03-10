@@ -4,9 +4,14 @@ Makefile
 *.dSYM
 *.o
 *.so
+*.so.*
 *.dylib
 *.out
+
 rlundo
 rlundolibpath
 testrlundoable
+rlundopatched
+
 readline-6.3
+modified-readline-6.3
