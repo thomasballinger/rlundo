@@ -11,17 +11,25 @@ test.out: test.c librlundoable.dylib
 	gcc -c test.c
 	gcc -v test.o -lreadline -o test.out
 
+# creating patched readline
 readline-6.3:
 	ftp 'ftp://ftp.cwru.edu/pub/bash/readline-6.3.tar.gz'
 	tar xzvf readline-6.3.tar.gz
-	rm readline-6.3.tar.gz
-	patch readline-6.3/readline.c readline.diff
-libreadline.6.3.dylib: readline-6.3
-	cd readline-6.3; ./configure; make
-	cp readline-6.3/shlib/libreadline.6.3.dylib libreadline.6.3.dylib
+modified-readline-6.3: readline.diff readline-6.3
+	rm -rf modified-readline-6.3
+	cp -r readline-6.3 modified-readline-6.3
+	patch modified-readline-6.3/readline.c readline.diff
+	cd modified-readline-6.3; ./configure
+libreadline.6.3.dylib: modified-readline-6.3
+	cd modified-readline-6.3; make
+	cp modified-readline-6.3/shlib/libreadline.6.3.dylib libreadline.6.3.dylib
 
 # other things to call libreadline.dylib
 libreadline.5.dylib: libreadline.6.3.dylib
 	ln -s libreadline.6.3.dylib libreadline.5.dylib
 libedit.3.dylib: libreadline.6.3.dylib
 	ln -s libreadline.6.3.dylib libedit.3.dylib
+
+# not included in make all - rebuild the diff based on edits to modified
+refresh-diff: readline-6.3 modified-readline-6.3
+	diff readline-6.3/readline.c modified-readline-6.3/readline.c > readline.diff

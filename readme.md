@@ -1,5 +1,4 @@
-rlundo
-======
+#rlundo
 
 Adds undo to interactive command line programs that use readline.
 Undo is implemented by forking the process every time readline()
@@ -13,9 +12,7 @@ I'm also trying to figure out how how to get an executable to load the modified
 readline function instead of the system one.
 
 
-
-Recipes
-=======
+##Recipes
 
 irb (interactive Ruby interpreter)
 ----------------------------------
@@ -31,13 +28,9 @@ I can get `irb` to work on linux and OSX with
     irb(main):001:0> a
     NameError: undefined local variable or method `a' for main:Object
 
+##Techniques for creating the substitute readline function
 
-
-Techniques for creating the substitute readline function
-========================================================
-
-Proxying readline calls to your system readline (function interposition)
-------------------------------------------------------------------------
+###Proxying readline calls to your system readline (function interposition)
 
 rlundoable.c contains a function called readline which when called by a program with
 find your call out to the readline function the program would have used.
@@ -62,8 +55,7 @@ It's currently hardcoded to try to load readline from
 
 which happens to be where brew puts it on my computer.
 
-Using a patched readline library
---------------------------------
+###Using a patched readline library
 
 Instead of proxying calls between a program and the real readline library,
 we can download the real readline library and patch it with out undo behavior.
@@ -77,11 +69,10 @@ we can download the real readline library and patch it with out undo behavior.
     enter a string: undo
     undoing 'with no command, so exiting'
 
-Techniques for getting programs to load our readline function
+##Techniques for getting programs to load our readline function
 =============================================================
 
-LD_PRELOAD
-----------
+###LD_PRELOAD
 
 LD_PRELOAD is the method I've found referenced most often: add the name of
 a dynamic library (`lib*.so` or `lib*.dylib`) to an environmental variable
@@ -101,8 +92,7 @@ osx:
 This seems to works for things 
 
 
-Library Path
-------------
+###Library Path
 
 Some programs seem to implement loading behavior themselves and don't respect LD_PRELOAD.
 rlundolibpath runs programs in an environment with LD_LIBRARY_PATH set to the current directory,
@@ -122,6 +112,7 @@ racket seems to work with this approach (but right now is segfaulting)
 
 
 
+##License
 
 Copyright 2015 Thomas Ballinger
 
