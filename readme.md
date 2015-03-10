@@ -51,6 +51,11 @@ Racket bugs:
 * there seems to be an extra readline call that happens at startup?
 * doesn't exit cleanly
 
+python
+------
+
+I can't get Python or IPython to work yet
+
 ##Techniques for creating the substitute readline function
 
 ###Proxying readline calls to your system readline (function interposition)
