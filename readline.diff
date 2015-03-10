@@ -1,6 +1,3 @@
-diff --git a/libreadline.a b/libreadline.a
-index 904a7ab..6c0aec9 100644
-Binary files a/libreadline.a and b/libreadline.a differ
 diff --git a/readline.c b/readline.c
 index 3550b35..8c0a221 100644
 --- a/readline.c
@@ -53,6 +50,3 @@ index 3550b35..8c0a221 100644
  #if defined (READLINE_CALLBACKS)
  #  define STATIC_CALLBACK
  #else
-diff --git a/shlib/libreadline.so.6.0 b/shlib/libreadline.so.6.0
-index f6058b4..9da9c4b 100755
-Binary files a/shlib/libreadline.so.6.0 and b/shlib/libreadline.so.6.0 differ
