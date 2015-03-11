@@ -11,6 +11,9 @@ and patching readline.
 I'm also trying to figure out how how to get an executable to load the modified
 readline function instead of the system one.
 
+    $ ./rlundo /usr/bin/irb
+    $ ./rlundopatched /usr/bin/racket -il readline
+    $ ./rlundo /usr/bin/lua
 
 ##Recipes
 
