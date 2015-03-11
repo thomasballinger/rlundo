@@ -61,11 +61,9 @@ lua works on linux:
     Lua 5.2.3  Copyright (C) 1994-2013 Lua.org, PUC-Rio
     > a = 1
     > undo
-    undoing ''
+    undoing 'a = 1'
     > print(a)
     nil
-
-Huh - so the undo message doesn't work quite right
 
 python
 ------
