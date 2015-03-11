@@ -35,7 +35,6 @@ Racket is working for me on linux, but not osx where weird things seem to happen
 
     $ make -f Makefilelinux rlundopatched
     gcc rlundopatched.c -o rlundopatched
-    echo '(require readline)' > ~/.racketrc
     $ ./rlundopatched /usr/bin/racket -il readline
     Welcome to Racket v5.3.6.
     > (define a 1)
@@ -48,8 +47,7 @@ Racket is working for me on linux, but not osx where weird things seem to happen
     /usr/share/racket/collects/racket/private/misc.rkt:87:7
 
 Racket bugs:
-* there seems to be an extra readline call that happens at startup?
-* doesn't exit cleanly
+* not quite working on osx - racket crashes in many cases
 
 lua
 ---
