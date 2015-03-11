@@ -73,7 +73,8 @@ but on osx it requires changing the library path:
 python
 ------
 
-I have't got Python or IPython to work yet
+Python and IPython don't work yet! The readline linking story seems more
+complicated. I'd appreciate help with this!
 
 ##Techniques for creating the substitute readline function
 
@@ -94,7 +95,7 @@ Based on http://wwwold.cs.umd.edu/Library/TRs/CS-TR-4585/CS-TR-4585.pdf
 I think the more elegant solution of dynamically locating the
 original readline with (`dlsym(RTLD_NEXT, "readline")`) won't work
 (I tried for a bit and then read that and decided to give up)
-so we assume some things about the location of readline.
+so we assume an exact location for the readline library.
 
 It's currently hardcoded to try to load readline from
 
@@ -105,8 +106,7 @@ which happens to be where brew puts it on my computer.
 ###Using a patched readline library
 
 Instead of proxying calls between a program and the real readline library,
-we can download the real readline library and patch it with out undo behavior.
-
+we can download the real readline library and patch it with our undo behavior.
 
     $ make -f Makefileosx libreadline.6.3.dylib
     ... (lots of compiling output)
@@ -117,7 +117,6 @@ we can download the real readline library and patch it with out undo behavior.
     undoing 'with no command, so exiting'
 
 ##Techniques for getting programs to load our readline function
-=============================================================
 
 ###LD_PRELOAD
 
@@ -136,9 +135,6 @@ osx:
 
   $ DYLD_FORCE_FLAT_NAMESPACE=1 DYLD_INSERT_LIBRARIES=./librlundoable.dylib ./test.out
 
-This seems to works for things 
-
-
 ###Library Path
 
 Some programs seem to implement loading behavior themselves and don't respect LD_PRELOAD.
@@ -155,9 +151,7 @@ hence the aliasing in the makefile:
     ln -s libreadline.6.3.dylib libedit.3.dylib
     $ DYLD_LIBRARY_PATH=. ./test.out
 
-racket seems to work with this approach (but right now is segfaulting)
-
-
+racket seems to work with this approach (but right now is segfaulting on osx)
 
 ##License
 
