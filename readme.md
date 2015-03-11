@@ -51,6 +51,22 @@ Racket bugs:
 * there seems to be an extra readline call that happens at startup?
 * doesn't exit cleanly
 
+lua
+---
+
+lua works on linux:
+
+    $ make -f Makefilelinx rlundo
+    $ ./rlundo /usr/bin/lua
+    Lua 5.2.3  Copyright (C) 1994-2013 Lua.org, PUC-Rio
+    > a = 1
+    > undo
+    undoing ''
+    > print(a)
+    nil
+
+Huh - so the undo message doesn't work quite right
+
 python
 ------
 

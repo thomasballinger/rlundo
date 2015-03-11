@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
     putenv("DYLD_FORCE_FLAT_NAMESPACE=1");
     putenv("DYLD_INSERT_LIBRARIES=./librlundoable.dylib");
   #else
-    putenv("LD_PRELOAD=./librlundoable.so");
+    putenv("LD_PRELOAD=./librlundoable.so:/lib/x86_64-linux-gnu/libtinfo.so.5");
   #endif
 
   execv(argv[1], argv + 1);    /* Note that exec() will not return on success. */
