@@ -54,7 +54,7 @@ Racket bugs:
 lua
 ---
 
-lua works on linux:
+lua works either way on linux:
 
     $ make -f Makefilelinx rlundo
     $ ./rlundo /usr/bin/lua
@@ -65,10 +65,17 @@ lua works on linux:
     > print(a)
     nil
 
+but on osx it requires changing the library path:
+
+    $ make -f Makefileosx rlundolibpath patched-readline
+    $ cd modified-libreadline-6.3/shlib
+    $ ./rlundo /usr/bin/lua
+    Lua 5.2.3  Copyright (C) 1994-2013 Lua.org, PUC-Rio
+
 python
 ------
 
-I can't get Python or IPython to work yet
+I have't got Python or IPython to work yet
 
 ##Techniques for creating the substitute readline function
 

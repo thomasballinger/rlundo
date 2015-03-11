@@ -1,4 +1,4 @@
-all: rlundo test.out rlundolibpath libreadline.6.3.dylib libreadline.5.dylib
+all: rlundo test.out rlundolibpath modified-readline-6.3/shlib/libreadline.6.3.dylib
 librlundoable.dylib: rlundoable.c
 	gcc -c rlundoable.c
 	gcc -dynamiclib -current_version 1.0 rlundoable.o -o librlundoable.dylib
@@ -20,16 +20,16 @@ modified-readline-6.3: readline.diff readline-6.3
 	cp -r readline-6.3 modified-readline-6.3
 	patch modified-readline-6.3/readline.c readline.diff
 	cd modified-readline-6.3; ./configure
-libreadline.6.3.dylib: modified-readline-6.3
+modified-readline-6.3/shlib/libreadline.6.3.dylib: modified-readline-6.3
 	cd modified-readline-6.3; make
-	cp modified-readline-6.3/shlib/libreadline.6.3.dylib libreadline.6.3.dylib
-
-# other things to call libreadline.dylib
-libreadline.5.dylib: libreadline.6.3.dylib
-	ln -s libreadline.6.3.dylib libreadline.5.dylib
-libedit.3.dylib: libreadline.6.3.dylib
-	ln -s libreadline.6.3.dylib libedit.3.dylib
+	# other things to call libreadline.dylib
+	cd modified-readline-6.3/shlib; ln -sf libreadline.6.3.dylib libreadline.5.dylib
+	cd modified-readline-6.3/shlib; ln -sf libreadline.6.3.dylib libedit.3.dylib
+patched-readline: modified-readline-6.3/shlib/libreadline.6.3.dylib
 
 # not included in make all - rebuild the diff based on edits to modified
-refresh-diff: readline-6.3 modified-readline-6.3
+refresh-diff: readline-6.3
 	diff readline-6.3/readline.c modified-readline-6.3/readline.c > readline.diff
+
+clean:
+	rm -rf *.dylib modified-readline-6.3
