@@ -112,7 +112,7 @@ class Terminal(object):
             sys.stdout.write(self.t.clear_eos)
             sys.stdout.write(re.sub(r'[a-z]',
                 lambda m: m.group().swapcase() if random.random() < .5 else m.group(),
-                ('\n\r').join(self.lines).replace('Python', self.status)))
+                ('\n\r').join(self.lines).replace('>>>', self.status)))
         sys.stdout.flush()
 
     @property
@@ -123,7 +123,7 @@ def until_last_line_with_content(lines):
     for i, line in enumerate(lines[-1::-1]):
         if line:
             break
-    return lines[:-i]
+    return lines[:len(lines)-i]
 
 class LocalClient(Client):
     def __init__(self, term):
