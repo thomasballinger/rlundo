@@ -80,7 +80,7 @@ class Terminal(object):
     def __init__(self, cursor_row):
         self.t = blessings.Terminal()
         self.initial_top_usable_row = cursor_row
-        self.scroll_offset = 0
+        self.top_usable_row = self.initial_top_usable_row
         self.w = self.t.width
         self.h = self.t.height
         self.vt = vt100.vt100(self.h, self.w)
@@ -91,8 +91,12 @@ class Terminal(object):
         self.stdout.flush()
 
     @property
-    def top_usable_row(self):
-        return max(0, self.initial_top_usable_row - self.scroll_offset)
+    def times_display_scrolled(self):
+        """How many times has the terminal scrolled down since start?
+        
+        NOT the scroll offset of the vt100 emulator - initially this will
+        grow while that stays at 0"""
+        return self.h - self.height_of_content
 
     def send(self, data):
         to_process = self.prev_read + data
@@ -101,14 +105,25 @@ class Terminal(object):
         return len(data)
 
     def render(self):
+        self.lines = until_last_line_with_content(self.vt.window_contents().splitlines())
+        if len(self.lines) > self.h - self.top_usable_row:
+            self.top_usable_row = max(0, (self.h - len(self.lines)))
         with self.t.location(x=0, y=self.top_usable_row):
-            visible = self.vt.window_contents(0, 0, self.h - 2 - self.top_usable_row)
-            visible = '\n\r'.join(visible.splitlines())
+            sys.stdout.write(self.t.clear_eos)
             sys.stdout.write(re.sub(r'[a-z]',
                 lambda m: m.group().swapcase() if random.random() < .5 else m.group(),
-                visible))
+                ('\n\r').join(self.lines).replace('Python', self.status)))
         sys.stdout.flush()
 
+    @property
+    def status(self):
+        return "top usable row: %d lines rendered: %d height: %d" % (self.top_usable_row, len(self.lines), self.h)
+
+def until_last_line_with_content(lines):
+    for i, line in enumerate(lines[-1::-1]):
+        if line:
+            break
+    return lines[:-i]
 
 class LocalClient(Client):
     def __init__(self, term):
