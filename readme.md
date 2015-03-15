@@ -1,5 +1,7 @@
 - [x] Run a program in a subprocess, and know what the current state of the terminal screen is.
 - [x] Keep track of original cursor starting location
 - [x] Take snapshots of terminal state.
-- [ ] Keep track of number of times scrolled down.
-  - [ ] modify doy's vt100 to notify on scroll down
+- [ ] Restore previous snapshots
+  - [ ] Keep track of number of times scrolled down.
+    - [x] modify doy's vt100 to keep track of scroll_offset
+- [ ] start vt100 cursor position where it was when started

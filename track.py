@@ -5,6 +5,7 @@ import re
 import termios
 import tty
 import threading
+from collections import namedtuple
 
 import vt100
 from termcast_client import Client
@@ -90,14 +91,6 @@ class Terminal(object):
         self.stdout.write(data)
         self.stdout.flush()
 
-    @property
-    def times_display_scrolled(self):
-        """How many times has the terminal scrolled down since start?
-        
-        NOT the scroll offset of the vt100 emulator - initially this will
-        grow while that stays at 0"""
-        return self.h - self.height_of_content
-
     def send(self, data):
         to_process = self.prev_read + data
         processed = self.vt.process(to_process)
@@ -116,9 +109,21 @@ class Terminal(object):
                 ('\n\r'+self.t.clear_eol).join(self.lines).replace('Python', self.status)))
         sys.stdout.flush()
 
+    def snapshot(self):
+        return TerminalState(
+            lines=until_last_line_with_content(self.vt.window_contents().splitlines()),
+            cursor_pos=self.vt.cursor_position(),
+            scroll_offset=self.vt._screen._scroll_offset)
+
     @property
     def status(self):
         return "top usable row: %d lines rendered: %d height: %d" % (self.top_usable_row, len(self.lines), self.h)
+
+TerminalState = namedtuple('TerminalState', [
+    'lines',          # list of lines
+    'cursor',         # where the cursor was, (line, col) out of lines
+    'scroll_offset',  # how many times vt100 had scrolled at that point
+    ])
 
 def until_last_line_with_content(lines):
     for i, line in enumerate(lines[-1::-1]):
@@ -149,7 +154,7 @@ def main():
     terminal = Terminal(cursor_row=start_row)
     client = LocalClient(terminal)
     t.start()
-    client.run(['python'])
+    client.run(sys.argv[1:])
 
 if __name__ == '__main__':
     main()
