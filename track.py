@@ -109,10 +109,11 @@ class Terminal(object):
         if len(self.lines) > self.h - self.top_usable_row:
             self.top_usable_row = max(0, (self.h - len(self.lines)))
         with self.t.location(x=0, y=self.top_usable_row):
-            sys.stdout.write(self.t.clear_eos)
+            #sys.stdout.write(self.t.clear_eos)
+            sys.stdout.write(self.t.clear_eol)
             sys.stdout.write(re.sub(r'[a-z]',
                 lambda m: m.group().swapcase() if random.random() < .5 else m.group(),
-                ('\n\r').join(self.lines).replace('>>>', self.status)))
+                ('\n\r'+self.t.clear_eol).join(self.lines).replace('Python', self.status)))
         sys.stdout.flush()
 
     @property
@@ -139,7 +140,7 @@ class LocalClient(Client):
 def main():
     def render_sometimes():
         while True:
-            time.sleep(1)
+            time.sleep(2)
             terminal.render()
     t = threading.Thread(target=render_sometimes)
     t.daemon = True
