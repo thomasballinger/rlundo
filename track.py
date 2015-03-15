@@ -1,4 +1,5 @@
 import sys
+import random
 import time
 import re
 import termios
@@ -52,9 +53,8 @@ def _inner_get_cursor_position(to_terminal, from_terminal):
                     raise ValueError("Stream should be blocking - should't"
                                      " return ''. Returned %r so far", (resp,))
                 return c
-            except ValueError: pass
-            #except IOError:
-            #    raise ValueError('cursor get pos response read interrupted')
+            except IOError:
+                raise ValueError('cursor get pos response read interrupted')
 
     resp = ''
     while True:
@@ -103,7 +103,10 @@ class Terminal(object):
     def render(self):
         with self.t.location(x=0, y=self.top_usable_row):
             visible = self.vt.window_contents(0, 0, self.h - 2 - self.top_usable_row)
-            sys.stdout.write(re.sub(r'[a-z]', 'X', visible).replace('\n', '\r\n'))
+            visible = '\n\r'.join(visible.splitlines())
+            sys.stdout.write(re.sub(r'[a-z]',
+                lambda m: m.group().swapcase() if random.random() < .5 else m.group(),
+                visible))
         sys.stdout.flush()
 
 
@@ -121,7 +124,7 @@ class LocalClient(Client):
 def main():
     def render_sometimes():
         while True:
-            time.sleep(4)
+            time.sleep(1)
             terminal.render()
     t = threading.Thread(target=render_sometimes)
     t.daemon = True
