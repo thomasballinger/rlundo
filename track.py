@@ -106,13 +106,16 @@ class Terminal(object):
     def scroll_offset(self):
         return self.vt._screen._scroll_offset
 
-    def render(self):
-        lines = self.vt.window_contents().splitlines()[self.top_usable_row:]
+    def render(self, state):
+        #TODO restore cursor position
+        #TODO account for scroll_offset
+        lines, cursor_pos, scroll_offset = state
+        lines_to_render = lines[self.top_usable_row:]
         with self.t.location(x=0, y=self.top_usable_row):
             sys.stdout.write(self.t.clear_eol)
             sys.stdout.write(re.sub(r'[a-z]',
                 lambda m: m.group().swapcase() if random.random() < .5 else m.group(),
-                ('\n\r'+self.t.clear_eol).join(lines).replace('Python', self.status)))
+                ('\n\r'+self.t.clear_eol).join(lines_to_render).replace('Python', self.status)))
         sys.stdout.flush()
 
     def snapshot(self):
@@ -127,7 +130,7 @@ class Terminal(object):
 
 TerminalState = namedtuple('TerminalState', [
     'lines',          # list of lines
-    'cursor',         # where the cursor was, (line, col) out of lines
+    'cursor_pos',     # where the cursor was, (line, col) out of lines
     'scroll_offset',  # how many times vt100 had scrolled at that point
     ])
 
@@ -152,7 +155,7 @@ def main():
     def render_sometimes():
         while True:
             time.sleep(2)
-            terminal.render()
+            terminal.render(terminal.snapshot())
     t = threading.Thread(target=render_sometimes)
     t.daemon = True
 
