@@ -81,10 +81,10 @@ class Terminal(object):
     def __init__(self, cursor_row):
         self.t = blessings.Terminal()
         self.initial_top_usable_row = cursor_row
-        self.top_usable_row = self.initial_top_usable_row
         self.w = self.t.width
         self.h = self.t.height
         self.vt = vt100.vt100(self.h, self.w)
+        self.vt.process(self.t.move(self.initial_top_usable_row, 1))
         self.prev_read = ''
 
     def write(self, data):
@@ -97,16 +97,22 @@ class Terminal(object):
         self.prev_read = to_process[processed:]
         return len(data)
 
+    @property
+    def top_usable_row(self):
+        """zero-indexed top line of terminal we can write to"""
+        return max(0, self.initial_top_usable_row - self.scroll_offset)
+
+    @property
+    def scroll_offset(self):
+        return self.vt._screen._scroll_offset
+
     def render(self):
-        self.lines = until_last_line_with_content(self.vt.window_contents().splitlines())
-        if len(self.lines) > self.h - self.top_usable_row:
-            self.top_usable_row = max(0, (self.h - len(self.lines)))
+        lines = self.vt.window_contents().splitlines()[self.top_usable_row:]
         with self.t.location(x=0, y=self.top_usable_row):
-            #sys.stdout.write(self.t.clear_eos)
             sys.stdout.write(self.t.clear_eol)
             sys.stdout.write(re.sub(r'[a-z]',
                 lambda m: m.group().swapcase() if random.random() < .5 else m.group(),
-                ('\n\r'+self.t.clear_eol).join(self.lines).replace('Python', self.status)))
+                ('\n\r'+self.t.clear_eol).join(lines).replace('Python', self.status)))
         sys.stdout.flush()
 
     def snapshot(self):
@@ -117,7 +123,7 @@ class Terminal(object):
 
     @property
     def status(self):
-        return "top usable row: %d lines rendered: %d height: %d" % (self.top_usable_row, len(self.lines), self.h)
+        return "top usable row: %d offset: %d" % (self.top_usable_row, self.scroll_offset)
 
 TerminalState = namedtuple('TerminalState', [
     'lines',          # list of lines
