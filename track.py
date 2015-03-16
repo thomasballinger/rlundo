@@ -120,7 +120,7 @@ class Terminal(object):
 
     def snapshot(self):
         return TerminalState(
-            lines=until_last_line_with_content(self.vt.window_contents().splitlines()),
+            lines=self.vt.window_contents().splitlines(),
             cursor_pos=self.vt.cursor_position(),
             scroll_offset=self.vt._screen._scroll_offset)
 
@@ -134,11 +134,6 @@ TerminalState = namedtuple('TerminalState', [
     'scroll_offset',  # how many times vt100 had scrolled at that point
     ])
 
-def until_last_line_with_content(lines):
-    for i, line in enumerate(lines[-1::-1]):
-        if line:
-            break
-    return lines[:len(lines)-i]
 
 class LocalClient(Client):
     def __init__(self, term):
@@ -154,7 +149,10 @@ class LocalClient(Client):
 def main():
     def render_sometimes():
         while True:
-            time.sleep(2)
+            old = terminal.snapshot()
+            time.sleep(1.8)
+            terminal.render(old)
+            time.sleep(.2)
             terminal.render(terminal.snapshot())
     t = threading.Thread(target=render_sometimes)
     t.daemon = True
