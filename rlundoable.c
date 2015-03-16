@@ -58,6 +58,7 @@ char* readline(const char *prompt){
     original_readline = get_original_readline();
   }
 
+  system("nc -z localhost 4242");
   value = (*original_readline)(prompt);
   if(!value){
     free(last_command);
@@ -66,10 +67,11 @@ char* readline(const char *prompt){
   }
   if(!strcmp(value, "undo")){
     printf("undoing '%s'\n", last_command);
+ 
     free(last_command);
     exit(42);
   }
-   pid_t pid = fork();
+  pid_t pid = fork();
 
   if (pid == 0) { // child
     last_command = strdup(value);
@@ -85,6 +87,8 @@ char* readline(const char *prompt){
     }
 
     if(exitstatus == 42){
+      system("nc -z localhost 4243");
+      system("nc -z localhost 4243");
       return readline(prompt);
     } else {
       exit(exitstatus);
