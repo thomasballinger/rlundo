@@ -1,10 +1,11 @@
-import sys
 import random
-import time
 import re
+import socket
+import sys
 import termios
-import tty
 import threading
+import time
+import tty
 from collections import namedtuple
 
 import vt100
@@ -86,6 +87,28 @@ class Terminal(object):
         self.vt = vt100.vt100(self.h, self.w)
         self.vt.process(self.t.move(self.initial_top_usable_row, 1))
         self.prev_read = ''
+        self.stack = [self.snapshot()]
+        self.set_up_listeners()
+
+    def set_up_listeners(self):
+        self.push = socket.socket()
+        self.push.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.push.bind(('localhost', 4242))
+        self.push.listen(1)
+        self.pop = socket.socket()
+        self.pop.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.pop.bind(('localhost', 4243))
+        self.pop.listen(1)
+
+    def wait_for_push(self):
+        while True:
+            self.push.accept()
+            self.stack.append(self.snapshot())
+
+    def wait_for_pop(self):
+        while True:
+            self.pop.accept()
+            self.render(self.stack.pop())
 
     def write(self, data):
         self.stdout.write(data)
@@ -116,6 +139,8 @@ class Terminal(object):
             sys.stdout.write(re.sub(r'[a-z]',
                 lambda m: m.group().swapcase() if random.random() < .5 else m.group(),
                 ('\n\r'+self.t.clear_eol).join(lines_to_render).replace('Python', self.status)))
+        self.vt.process(self.t.move(*cursor_pos))
+        sys.stdout.write(self.t.move(*cursor_pos))
         sys.stdout.flush()
 
     def snapshot(self):
@@ -126,7 +151,7 @@ class Terminal(object):
 
     @property
     def status(self):
-        return "top usable row: %d offset: %d" % (self.top_usable_row, self.scroll_offset)
+        return "stack height: %d offset: %d" % (len(self.stack), self.scroll_offset)
 
 TerminalState = namedtuple('TerminalState', [
     'lines',          # list of lines
@@ -154,13 +179,21 @@ def main():
             terminal.render(old)
             time.sleep(.2)
             terminal.render(terminal.snapshot())
-    t = threading.Thread(target=render_sometimes)
-    t.daemon = True
 
     start_row, _ = get_cursor_position(sys.stdout, sys.stdin)
     terminal = Terminal(cursor_row=start_row)
     client = LocalClient(terminal)
-    t.start()
+
+    t1 = threading.Thread(target=render_sometimes)
+    t1.daemon = True
+    t2 = threading.Thread(target=terminal.wait_for_push)
+    t2.daemon = True
+    t3 = threading.Thread(target=terminal.wait_for_pop)
+    t3.daemon = True
+
+    #t1.start()
+    t2.start()
+    t3.start()
     client.run(sys.argv[1:])
 
 if __name__ == '__main__':
