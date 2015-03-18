@@ -3,9 +3,8 @@ Terminal diagrams for describing how text is moved when the window of a
 terminal emulator is resized.
 
 # @ is cursor
-# * is content in application (not our job to reflow)
 # + means this is a continued line
-# . means a space character (spaced are empty)
+# . means a space character (spaces are empty)
 # capital letters mean history
 # lowercase letters are in the app's control
 #
@@ -219,9 +218,23 @@ class TestTerminalResizing(object):
         """Checks that output matches final terminal"""
         raise NotImplementedError
 
+# Tests:
 
-class test_parse_term_state(unittest.TestCase):
-    pass
+"""
++---------+
+|georgiann+         +----------+
+|a        !         |georgianna|
+|         !         |          |
++---------+   -->   +----------+
+|hello    |         |hello     |
+|bpython  |         |bpython   |
+|*********|         |**********|
+|*        |         |@         |
+|****     |         |          |
+|@        |         |          |
++---------+         +----------+
+"""
+
 
 # Test just for resizing
 
