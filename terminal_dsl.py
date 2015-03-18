@@ -23,17 +23,6 @@ from functools import partial
 import re
 from collections import namedtuple
 
-TerminalState = namedtuple('TerminalState', [
-    'all_lines',      # logical lines of history and content
-    'history_rows',   # displayed rows of history
-    'display_rows',   # list of row strings
-    'cursor_pos',     # row, column; 0-indexed
-    'cursor_col',     # cursor column, 0-index
-    'cursor_line',    # 0-indexed logical line of cursor
-    'cursor_offset',  # position in logical line of first character
-    'width',          # number of columns
-    ])
-
 def divide_term_states(s):
     """Return a list of vertically divided terminal diagrams from one string
 
@@ -48,7 +37,7 @@ def divide_term_states(s):
     ... '''))
     3
     """
-    #TODO allow the first line to have content on it (has to be blank right now)
+    # TODO allow the first line to have content on it (has to be blank right now)
     lines = s.split('\n')
     if lines[0].strip():
         raise ValueError('Top line needs to be blank')
@@ -71,6 +60,59 @@ def divide_term_states(s):
     diagrams = [s for s in candidates if '|' in s and '-' in s and '@' in s]
     return diagrams
 
+_TerminalStateBase = namedtuple('TerminalState', [
+    'lines',          # logical lines of history and content
+    'cursor_line',    # 0-indexed logical line of cursor
+    'cursor_offset',  # position in logical line of first character
+    'width',          # number of columns
+])
+
+
+def split_line(line, width):
+    """
+    >>> split_line('abcdefg', 3)
+    ['abc', 'def', 'g']
+    """
+    splits = range(0, len(line), width) + [len(line)]
+    return [line[start:end] for start, end in zip(splits[:-1], splits[1:])]
+
+
+def split_lines(lines, width):
+    """
+    >>> split_lines(['abcd', 'e', 'fgh'], 3)
+    ['abc', 'd', 'e', 'fgh']
+    """
+    rows = []
+    for line in lines:
+        rows.extend(split_line(line, width))
+    return rows
+
+
+class TerminalState(_TerminalStateBase):
+    @classmethod
+    def from_redundant_information(cls):
+        """Takes a bunch of arguments to check that derived properties are accurate"""
+        pass
+
+    @property
+    def visible_rows(self):
+        return self[self.history_height:]
+
+    @property
+    def history_rows(self):
+        return self[:self.history_height]
+
+    @property
+    def cursor_row(self):
+        pass
+
+    @property
+    def cursor_column(self):
+        pass
+
+    def height(self):
+        pass
+
 
 def parse_term_state(s):
     """Returns TerminalState tuple given a terminal state diagram
@@ -92,13 +134,28 @@ def parse_term_state(s):
     ... ''')
     >>> label
     'label'
+    >>> state.width
+    11
+
+    #>>> state.history_rows
+    #['12345678901', '23456789', '$ echo hi']
+    #>>> state.visible_rows
+    #['hi', '$ python', '>>> 1 + 1', '2', '', '']
     """
 
     top_border_match = re.search(r'(?<=\n)\s*([+][-]+[+])\s*(?=\n)', s)
     label = ' '.join(line.strip()
                      for line in s[:top_border_match.start()].split('\n')
                      if line.strip())
-    return label, None
+    top_border = top_border_match.group(1)
+    width = len(top_border) - 2
+
+    return label, TerminalState(
+        lines=None,
+        cursor_line=None,
+        cursor_offset=None,
+        width=width
+    )
 
 
 
