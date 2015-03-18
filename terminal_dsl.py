@@ -65,6 +65,8 @@ _TerminalStateBase = namedtuple('TerminalState', [
     'cursor_line',    # 0-indexed logical line of cursor
     'cursor_offset',  # position in logical line of first character
     'width',          # number of columns
+    'height',         # number of visible rows
+    'history_height'  # number of history rows
 ])
 
 
@@ -91,16 +93,16 @@ def split_lines(lines, width):
 class TerminalState(_TerminalStateBase):
     @classmethod
     def from_redundant_information(cls):
-        """Takes a bunch of arguments to check that derived properties are accurate"""
+        """Uses extra parameters to check derived properties"""
         pass
 
     @property
     def visible_rows(self):
-        return self[self.history_height:]
+        return split_lines(self.lines, self.width)[self.history_height:]
 
     @property
     def history_rows(self):
-        return self[:self.history_height]
+        return split_lines(self.lines, self.width)[:self.history_height]
 
     @property
     def cursor_row(self):
@@ -108,9 +110,6 @@ class TerminalState(_TerminalStateBase):
 
     @property
     def cursor_column(self):
-        pass
-
-    def height(self):
         pass
 
 
@@ -149,6 +148,22 @@ def parse_term_state(s):
                      if line.strip())
     top_border = top_border_match.group(1)
     width = len(top_border) - 2
+
+    sections = [
+        ('before', None),
+        ('history_rows', []),
+        ('visible_rows', []),
+        ('after, None'),
+    ]
+
+    input_rows = re.findall(r'(?<=\n)\s*([+|].*[+!|])\s*(?=\n|\Z)', s)
+    for input_row in input_rows:
+        inner = input_row[1:-1]
+        if inner == '-'*width:
+            current_row = sections[sections.index(current_row) + 1]
+            if section == 'after':
+                break
+            continue
 
     return label, TerminalState(
         lines=None,
