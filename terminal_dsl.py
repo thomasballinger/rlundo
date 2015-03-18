@@ -5,9 +5,8 @@ terminal emulator is resized.
 # @ is cursor
 # + means this is a continued line
 # . means a space character (spaces are empty)
-# capital letters mean history
+# everything else is content
 # lowercase letters are in the app's control
-#
 
 A diagram looks like this:
     +-----+
@@ -20,17 +19,23 @@ A diagram looks like this:
 
 """
 
-import unittest
 from functools import partial
 import re
 from collections import namedtuple
 
-TerminalState = namedtuple('TerminalState',
-                           ['history', 'rendered', 'top_usable_row',
-                            'scrolled', 'cursor', 'visible', 'rows', 'columns'])
+TerminalState = namedtuple('TerminalState', [
+    'all_lines',      # logical lines of history and content
+    'history_rows',   # displayed rows of history
+    'display_rows',   # list of row strings
+    'cursor_pos',     # row, column; 0-indexed
+    'cursor_col',     # cursor column, 0-index
+    'cursor_line',    # 0-indexed logical line of cursor
+    'cursor_offset',  # position in logical line of first character
+    'width',          # number of columns
+    ])
 
 def divide_term_states(s):
-    """Return a list of verically divided terminal diagrams from one string
+    """Return a list of vertically divided terminal diagrams from one string
 
     >>> len(divide_term_states('''
     ... +-----+    +-------+   +--+
@@ -70,45 +75,58 @@ def divide_term_states(s):
 def parse_term_state(s):
     """Returns TerminalState tuple given a terminal state diagram
 
-    >>> parse_term_state('''
-    ...  label
-    ... +-----+
-    ... |ABC  |
-    ... +-----+
-    ... |BC   |
-    ... |abc@ |
-    ... |     |
-    ... +-----+
+    >>> label, state = parse_term_state('''
+    ...     label
+    ... +-----------+
+    ... |12345678901+
+    ... |23456789   |
+    ... |$ echo hi  |
+    ... +-----------+
+    ... |hi         |
+    ... |$ python   |
+    ... |>>> 1 + 1  |
+    ... |2          |
+    ... |@          |
+    ... |           |
+    ... +-----------+
     ... ''')
-    ('label', TerminalState(history=['abc'], rendered=['abc'], top_usable_row=1, scrolled=0, cursor=(1, 3), visible=['bc', 'abc'], rows=3, columns=5))
+    >>> label
+    'label'
     """
 
+    top_border_match = re.search(r'(?<=\n)\s*([+][-]+[+])\s*(?=\n)', s)
+    label = ' '.join(line.strip()
+                     for line in s[:top_border_match.start()].split('\n')
+                     if line.strip())
+    return label, None
+
+
+
+def asdf():
     m = re.search(r'(?<=\n)\s*([+][-]+[+])\s*(?=\n)', s)
     label = ' '.join(line.strip() for line in s[:m.start()].split('\n') if line.strip())
-    top_line = m.group(1)
-    width = len(top_line) - 2
+    top_border = m.group(1)
+    width = len(top_border) - 2
     assert width > 0
-    lines = re.findall(r'(?<=\n)\s*([+|].*[+!|])\s*(?=\n|\Z)', s)
-    for line in lines:
-        if len(line) - 2 != width:
-            raise ValueError("terminal diagram line not of width %d: %r" % (width + 2, line,))
-        assert len(line) - 2 == width
+    input_rows = re.findall(r'(?<=\n)\s*([+|].*[+!|])\s*(?=\n|\Z)', s)
+    for input_row in input_rows:
+        if len(input_row) - 2 != width:
+            raise ValueError("terminal diagram row not of width %d: %r" % (width + 2, input_row,))
 
     sections = ('before', 'history', 'visible', 'after')
     section = sections[0]
-    current_display_line = -1
+    current_visible_row = -1
     maybe_for_visible = []
     maybe_for_rendered = []
 
     history = []
     rendered = []
     visible = []
-    cursor= None
+    cursor = None
     top_usable_row = 0
-    scrolled = 0
 
-    for line in lines:
-        inner = line[1:-1]
+    for input_row in input_rows:
+        inner = input_row[1:-1]
         if inner == '-'*width:
             section = sections[sections.index(section) + 1]
             if section == 'after':
@@ -116,12 +134,12 @@ def parse_term_state(s):
             continue
 
         if section == 'visible':
-            current_display_line += 1
+            current_visible_row += 1
 
         if '@' in inner:
             if cursor is not None:
                 raise ValueError("Two cursors (@'s) in terminal diagram:\n%s" % (s,))
-            cursor = (current_display_line, inner.index('@'))
+            cursor = (current_visible_row, inner.index('@'))
             inner = inner.replace('@', ' ')
 
         if section == 'history':
@@ -147,8 +165,6 @@ def parse_term_state(s):
                 rendered.append(inner.rstrip())
                 del maybe_for_rendered[:]
             elif is_upper(inner) and section == 'visible':
-                if rendered:
-                    raise ValueError('Uppercase lines after lowercase line (%r) in terminal diagram:\n%s' % (line, s))
                 top_usable_row += 1
         else:
             maybe_for_rendered.append(inner.strip())
@@ -181,154 +197,6 @@ def line_is(type, line):
 is_lower = partial(line_is, 'lower')
 is_upper = partial(line_is, 'upper')
 
-class TestTerminalResizing(object):
-    """Mixin for testing """
-    def assertResizeMatches(self, diagram):
-        term_states = divide_term_states(diagram)
-        label1, initial = parse_term_state(term_states[0])
-        label2, final = parse_term_state(term_states[1])
-        print type(final.rendered[0])
-        #TODO when testing different terminals, use labels to identify
-
-        self.prepare_terminal(initial.rows, initial.columns, initial.history,
-                              initial.visible, initial.cursor, initial.rendered,
-                              initial.top_usable_row)
-        self.resize(final.rows, final.columns)
-        requested_cursor_row = final.cursor[0] - final.top_usable_row
-        print 'requested_cursor_row:', requested_cursor_row
-        self.render(final.rendered, (requested_cursor_row, final.cursor[1]))
-        print 'expected cursor row:', final.cursor[0]
-        self.check_output(final.history, final.visible, final.cursor, final.rows, final.columns)
-
-    def prepare_terminal(self, rows, columns, history, visible, cursor, rendered, top_usable_row):
-        """Set terminal emulator to have these properties
-
-        self.window should now refer to a CursorAwareWindow object
-        wired up to talk to a terminal
-        """
-        raise NotImplementedError()
-
-    def render(self, array):
-        raise NotImplementedError
-
-    def resize(self, rows, columns):
-        raise NotImplementedError
-
-    def check_output(self, history, visible, cursor, rows, columns):
-        """Checks that output matches final terminal"""
-        raise NotImplementedError
-
-# Tests:
-
-"""
-+---------+
-|georgiann+         +----------+
-|a        !         |georgianna|
-|         !         |          |
-+---------+   -->   +----------+
-|hello    |         |hello     |
-|bpython  |         |bpython   |
-|*********|         |**********|
-|*        |         |@         |
-|****     |         |          |
-|@        |         |          |
-+---------+         +----------+
-"""
-
-
-# Test just for resizing
-
-#Parsing the diagrams:
-# prepopulate history
-# put cursor on right line
-# detect window changes and make them
-# make app output exactly what is shown (build array)
-# determine top usable line and scrolled from initial diagram
-# detect repl.scrolled from repl lines in history
-
-"""
-+---------+         +----------+
-|GEOrgiann+         |georgiann |
-|a        !         |a         |
-|         !         |          |
-+---------+   -->   +----------+
-|hello    |         |hello     |
-|bpython  |         |bpython   |
-|*********|         |**********|
-|*        |         |****@     |
-|****@    |         |          |
-|         |         |          |
-+---------+         +----------+
-"""
-
-decrease_height_with_space_at_bottom_and_cursor_at_end = """
-#---------#         #---------#   #---------#
-|georgiann+         |georgiann|   |georgiann|
-|a        |         |a        |   |a        |
-|         |         |         |   |         |
-#---------#   -->   #---------#   |hello    |
-|hello    |         |hello    |   #---------#
-|bpython  |         |bpython  |   |bpython  |
-|*********|         |*********|   |*********|
-|*        |         |*        |   |*        |
-|****@    |         |****@    |   |****@    |
-|         |         #---------#   |         |
-#---------#                       #---------#
-"""
-decrease_width_with_space_at_bottom_and_cursor_at_end = """
-
-                                     reflow
-                       xterm       +--------+
-+---------+         +--------+     |georgian+
-|georgiann+         |georgian|     |na      |
-|a        !         |a       |     |        |
-|         !         |        |     |hello   |
-+---------+   -->   +--------+     +--------+
-|hello    |         |hello   |     |bpython |
-|bpython  |         |bpython |     |********|
-|*********|         |********|     |*       |
-|*        |         |*       |     |****@   |
-|****@    |         |****@   |     |        |
-|         |         |        |     |        |
-+---------+         +--------+     +--------+
-"""
-decrease_width_with_cursor_not_at_end = """
-
-                                     reflow
-                       xterm       +--------+
-+---------+         +--------+     |georgian+
-|georgiann+         |georgian|     |na      |
-|a        !         |a       |     |        |
-|         !         |        |     |hello   |
-|stuff    !         |stuff   |
-+---------+   -->   +--------+     +--------+
-|******   |         |******  |     |bpython |
-|*******  |         |******* |     |*       |
-|*********|         |********|     |****@   |
-|*        |         |*       |     |********|
-|****@    |         |****@   |     |        |
-|*********|         |********|     |        |
-+---------+         +--------+     +--------+
-"""
-decrease_height_with_cursor_not_at_bottom = """
-
-                       xterm         reflow
-+---------+         +---------+    +---------+
-|GEORGIANN+         |GEORGIANN|    |GEORGIANN+
-|A        !         |A        |    |A        !
-|         !         |         |    |         !
-|STUFF    !         |STUFF    |    |STUFF    !
-+---------+   -->   |abcdef   |    |abcdef   |
-|abcdef   |         #---------#    +---------+
-|ghijklm  |         |ghijklm  |    |ghijklm  |
-|nopqrstuv|         |nopqrstuv|    |nopqrstuv|
-|w        |         |w        |    |w        | should break history in this case
-|xyza@    |         |xyza@    |    |xyza@    |
-|bcdefghij|         |bcdefghij|    |bcdefghij|
-+---------+         +---------+    +---------+
-"""
-
-# what the app does: render its lines based on initial top usable and scrolled
 
 # should eventually test xterm, gnome-terminal, iterm, terminal.app, tmux
 
@@ -337,13 +205,6 @@ decrease_height_with_cursor_not_at_bottom = """
 # * does xterm do cursor at bottom scroll up differently?
 # * can xterm ever have a clear space at bottom but history
 
-# in reflowing terminals, when window narrows and causes wrap
-# to send things off the top, we need to know behavior of those leaving lines
-
-# for reflowing terminals, we're going to need every single width and height along the way to a change
-# (changing window size and changing it back in a fluid motion still causes changes
-
-
-
-# We also need to test that when FakeBpython asked for display of 
-
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
