@@ -13,7 +13,8 @@
 ##The real thing
 
 - [ ] set up testing harness: use a GUI terminal emulator 
-  - [ ] install rxvt-unicode
+  - [ ] programmatically set up tmux
+    - [ ] programmatically set up tmux
   - [ ] request state of scrollback buffer and screen
   - [ ] write a simple test
   - [ ] implement cursor query to discover how cursor moved
