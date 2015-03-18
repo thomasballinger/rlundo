@@ -8,7 +8,7 @@ terminal emulator is resized.
 # . means a space character (spaced are empty)
 # capital letters mean history
 # lowercase letters are in the app's control
-# 
+#
 
 A diagram looks like this:
     +-----+
