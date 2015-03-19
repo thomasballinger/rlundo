@@ -5,8 +5,8 @@ terminal emulator is resized.
 # @ is cursor
 # + means this is a continued line
 # . means a space character (spaces are empty)
+# ~ means this line is empty (no content on line, no newline on prev line)
 # everything else is content
-# lowercase letters are in the app's control
 
 A diagram looks like this:
     +-----+
@@ -32,7 +32,7 @@ def divide_term_states(s):
     ... +-----+    +-------+   |@ |
     ... |BC   | -> |BC     |   +--+
     ... |abc@ |    |abc@   |
-    ... |     |    |       |
+    ... |~    |    |~      |
     ... +-----+    +-------+
     ... '''))
     3
@@ -108,11 +108,16 @@ class TerminalState(_TerminalStateBase):
 
     @property
     def cursor_row(self):
-        pass
+        """one-indexed"""
+        above = len(split_lines(self.lines[:self.cursor_line], self.width))
+        rows, _ = divmod(len(self.lines[self.cursor_line][:self.cursor_offset+1]), self.width)
+        return above - self.history_height + rows + 1
 
     @property
     def cursor_column(self):
-        pass
+        """one-indexed"""
+        _, offset = divmod(len(self.lines[self.cursor_line][:self.cursor_offset+1]), self.width)
+        return offset + 1
 
 
 def parse_term_state(s):
@@ -130,7 +135,7 @@ def parse_term_state(s):
     ... |>>> 1 + 1  |
     ... |2          |
     ... |@          |
-    ... |           |
+    ... ~           ~
     ... +-----------+
     ... ''')
     >>> label
@@ -138,16 +143,15 @@ def parse_term_state(s):
     >>> state.width
     11
     >>> state.lines
-    ['1234567890123456789', '$ echo hi', 'hi', '$ python', '>>> 1 + 1', '2', '', '']
+    ['1234567890123456789', '$ echo hi', 'hi', '$ python', '>>> 1 + 1', '2', '']
     >>> state.history_rows
     ['12345678901', '23456789', '$ echo hi']
     >>> state.visible_rows
-    ['hi', '$ python', '>>> 1 + 1', '2', '', '']
+    ['hi', '$ python', '>>> 1 + 1', '2', '']
     >>> (state.cursor_line, state.cursor_offset)
     (6, 0)
-
-    #>>> (state.cursor_row, state.cursor_column)
-    #(7, 0)
+    >>> (state.cursor_row, state.cursor_column)
+    (5, 1)
     """
 
     top_border_match = re.search(r'(?<=\n)\s*([+][-]+[+])\s*(?=\n)', s)
@@ -171,6 +175,9 @@ def parse_term_state(s):
             if section == 'after':
                 break
             continue
+        elif input_row[0] == input_row[-1] == '~':
+            if not section == 'visible':
+                raise ValueError('~ in non-visible section')
         else:
             section_heights[section] += 1
 
@@ -207,85 +214,6 @@ def parse_term_state(s):
         history_height=section_heights['history'],
     )
 
-
-
-def asdf():
-    m = re.search(r'(?<=\n)\s*([+][-]+[+])\s*(?=\n)', s)
-    label = ' '.join(line.strip() for line in s[:m.start()].split('\n') if line.strip())
-    top_border = m.group(1)
-    width = len(top_border) - 2
-    assert width > 0
-    input_rows = re.findall(r'(?<=\n)\s*([+|].*[+!|])\s*(?=\n|\Z)', s)
-    for input_row in input_rows:
-        if len(input_row) - 2 != width:
-            raise ValueError("terminal diagram row not of width %d: %r" % (width + 2, input_row,))
-
-    sections = ('before', 'history', 'visible', 'after')
-    section = sections[0]
-    current_visible_row = -1
-    maybe_for_visible = []
-    maybe_for_rendered = []
-
-    history = []
-    rendered = []
-    visible = []
-    cursor = None
-    top_usable_row = 0
-
-    for input_row in input_rows:
-        inner = input_row[1:-1]
-        if inner == '-'*width:
-            section = sections[sections.index(section) + 1]
-            if section == 'after':
-                break
-            continue
-
-        if section == 'visible':
-            current_visible_row += 1
-
-        if '@' in inner:
-            if cursor is not None:
-                raise ValueError("Two cursors (@'s) in terminal diagram:\n%s" % (s,))
-            cursor = (current_visible_row, inner.index('@'))
-            inner = inner.replace('@', ' ')
-
-        if section == 'history':
-            history.append(inner.lower().rstrip())
-        elif section == 'visible':
-            if inner.strip():
-                visible.extend(maybe_for_visible)
-                del maybe_for_visible[:]
-                visible.append(inner.lower().rstrip())
-            else:
-                maybe_for_visible.append(inner.lower().rstrip())
-        elif section == 'after':
-            break
-        elif section == 'before':
-            continue
-
-        if inner.strip():
-            if is_lower(inner):
-                if section == 'history':
-                    scrolled += 1
-                    scrolled += len(maybe_for_rendered)
-                rendered.extend(maybe_for_rendered)
-                rendered.append(inner.rstrip())
-                del maybe_for_rendered[:]
-            elif is_upper(inner) and section == 'visible':
-                top_usable_row += 1
-        else:
-            maybe_for_rendered.append(inner.strip())
-
-    if not section == 'after':
-        raise ValueError("finish in section %s - didn't complete terminal diagram:\n%s" % (section, s))
-    if cursor is None:
-        raise ValueError("No cursor found (@) in terminal diagram:\n%s" % (s,))
-
-    return (label,
-            TerminalState(history=history, rendered=rendered,
-                          top_usable_row=top_usable_row, scrolled=scrolled,
-                          cursor=cursor, visible=visible,
-                          rows=current_display_line+1, columns=width))
 
 def line_is(type, line):
     has_upper = bool(re.search('[A-Z]', line))
