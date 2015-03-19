@@ -75,14 +75,16 @@ def split_line(line, width):
     >>> split_line('abcdefg', 3)
     ['abc', 'def', 'g']
     """
+    if line == '':
+        return ['']
     splits = range(0, len(line), width) + [len(line)]
     return [line[start:end] for start, end in zip(splits[:-1], splits[1:])]
 
 
 def split_lines(lines, width):
     """
-    >>> split_lines(['abcd', 'e', 'fgh'], 3)
-    ['abc', 'd', 'e', 'fgh']
+    >>> split_lines(['abcd', 'e', 'fgh', ''], 3)
+    ['abc', 'd', 'e', 'fgh', '']
     """
     rows = []
     for line in lines:
@@ -135,11 +137,17 @@ def parse_term_state(s):
     'label'
     >>> state.width
     11
+    >>> state.lines
+    ['1234567890123456789', '$ echo hi', 'hi', '$ python', '>>> 1 + 1', '2', '', '']
+    >>> state.history_rows
+    ['12345678901', '23456789', '$ echo hi']
+    >>> state.visible_rows
+    ['hi', '$ python', '>>> 1 + 1', '2', '', '']
+    >>> (state.cursor_line, state.cursor_offset)
+    (6, 0)
 
-    #>>> state.history_rows
-    #['12345678901', '23456789', '$ echo hi']
-    #>>> state.visible_rows
-    #['hi', '$ python', '>>> 1 + 1', '2', '', '']
+    #>>> (state.cursor_row, state.cursor_column)
+    #(7, 0)
     """
 
     top_border_match = re.search(r'(?<=\n)\s*([+][-]+[+])\s*(?=\n)', s)
@@ -149,27 +157,54 @@ def parse_term_state(s):
     top_border = top_border_match.group(1)
     width = len(top_border) - 2
 
-    sections = [
-        ('before', None),
-        ('history_rows', []),
-        ('visible_rows', []),
-        ('after, None'),
-    ]
+    sections = ('before', 'history', 'visible', 'after')
+    section = sections[0]
+    lines = []
+    unfinished_line = None
+    section_heights = dict(zip(sections, [0] * len(sections)))
 
     input_rows = re.findall(r'(?<=\n)\s*([+|].*[+!|])\s*(?=\n|\Z)', s)
     for input_row in input_rows:
         inner = input_row[1:-1]
         if inner == '-'*width:
-            current_row = sections[sections.index(current_row) + 1]
+            section = sections[sections.index(section) + 1]
             if section == 'after':
                 break
             continue
+        else:
+            section_heights[section] += 1
+
+        if input_row[-1] == '+':
+            if unfinished_line is None:
+                unfinished_line = ''
+            unfinished_line += inner
+        else:
+            if unfinished_line is None:
+                lines.append(inner.rstrip())
+            else:
+                unfinished_line += inner.rstrip()
+                lines.append(unfinished_line)
+                unfinished_line = None
+    else:
+        raise ValueError("not enough sections, didn't finish parsing")
+    if unfinished_line is not None:
+        lines.append(unfinished_line)
+
+    for cursor_line, line in enumerate(lines):
+        if '@' in line:
+            cursor_offset = line.index('@')
+            lines[cursor_line] = line.replace('@', '')
+            break
+    else:
+        raise ValueError("No cursor (@) found")
 
     return label, TerminalState(
-        lines=None,
-        cursor_line=None,
-        cursor_offset=None,
-        width=width
+        lines=lines,
+        cursor_line=cursor_line,
+        cursor_offset=cursor_offset,
+        width=width,
+        height=section_heights['visible'],
+        history_height=section_heights['history'],
     )
 
 
