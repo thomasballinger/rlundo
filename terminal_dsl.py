@@ -167,7 +167,9 @@ def parse_term_state(s):
     unfinished_line = None
     section_heights = dict(zip(sections, [0] * len(sections)))
 
-    input_rows = re.findall(r'(?<=\n)\s*([+|].*[+!|])\s*(?=\n|\Z)', s)
+    input_rows = re.findall(r'(?<=\n)\s*([+|~].*[+|~])\s*(?=\n|\Z)', s)
+    if not all(len(input_rows[0]) == len(r) for r in input_rows):
+        raise ValueError('row differs in width from first')
     for input_row in input_rows:
         inner = input_row[1:-1]
         if inner == '-'*width:
@@ -175,11 +177,13 @@ def parse_term_state(s):
             if section == 'after':
                 break
             continue
-        elif input_row[0] == input_row[-1] == '~':
-            if not section == 'visible':
-                raise ValueError('~ in non-visible section')
         else:
             section_heights[section] += 1
+
+        if input_row[0] == input_row[-1] == '~':
+            if not section == 'visible':
+                raise ValueError('~ in non-visible section')
+            continue
 
         if input_row[-1] == '+':
             if unfinished_line is None:
@@ -213,24 +217,6 @@ def parse_term_state(s):
         height=section_heights['visible'],
         history_height=section_heights['history'],
     )
-
-
-def line_is(type, line):
-    has_upper = bool(re.search('[A-Z]', line))
-    has_lower = bool(re.search('[a-z]', line))
-    if has_upper and has_lower:
-        raise ValueError('Both uppercase and lowercase letters in terminal diagram line: %r' % (line,))
-    elif not has_upper and not has_lower:
-        raise ValueError('no uppercase or lowercase letters in terminal diagram line: %r' % (line,))
-    elif type == 'upper' and has_upper and not has_lower:
-        return True
-    elif type == 'lower' and has_lower and not has_upper:
-        return True
-    else:
-        return False
-
-is_lower = partial(line_is, 'lower')
-is_upper = partial(line_is, 'upper')
 
 
 # should eventually test xterm, gnome-terminal, iterm, terminal.app, tmux
