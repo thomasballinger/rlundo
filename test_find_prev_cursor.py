@@ -11,11 +11,11 @@ import unittest
 from terminal_dsl import divide_term_states, parse_term_state
 
 
+'''
 def find_prev_cursor_pos(diagram, sequence):
     snap1, snap2, result = [parse_term_state(
         x) for x in divide_term_states(diagram)]
     print snap1, snap2, result
-
 
 
 
@@ -35,6 +35,19 @@ class TestResizing(unittest.TestCase):
         |         |         |@         |         |          |
         +---------+         +----------+         +----------+
         """, "3 + 4\n\r7\n\r")
+'''
 
+
+
+# check that last two terminals have same dimensions
+# ignore first
+# playing process in blank terminal should give reverse of diff of 1 and 2
+# 
+
+
+#   Grander plan: use diagrams to describe the way that tmux window will be
+#   modified!
+#
+#   Plan for now: just send keys and use 
 
 

@@ -19,7 +19,7 @@ A diagram looks like this:
 
 """
 
-from functools import partial
+import unittest
 import re
 from collections import namedtuple
 

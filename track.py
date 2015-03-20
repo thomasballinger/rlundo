@@ -2,80 +2,19 @@ import random
 import re
 import socket
 import sys
-import termios
 import threading
 import time
-import tty
+import signal
 from collections import namedtuple
 
 import vt100
 from termcast_client import Client
 import blessings
+from findcursor import get_cursor_position
 
 #Based heavily off of the work of doy, github.com/doy
 
 #TODO get initial cursor position, call it 
-
-class Cbreak(object):
-    def __init__(self, stream):
-        self.stream = stream
-    def __enter__(self):
-        self.original_stty = termios.tcgetattr(self.stream)
-        tty.setcbreak(self.stream, termios.TCSANOW)
-        return Termmode(self.stream, self.original_stty)
-    def __exit__(self, *args):
-        termios.tcsetattr(self.stream, termios.TCSANOW, self.original_stty)
-
-class Termmode(object):
-    def __init__(self, stream, attrs):
-        self.stream = stream
-        self.attrs = attrs
-    def __enter__(self):
-        self.original_stty = termios.tcgetattr(self.stream)
-        termios.tcsetattr(self.stream, termios.TCSANOW, self.attrs)
-    def __exit__(self, *args):
-        termios.tcsetattr(self.stream, termios.TCSANOW, self.original_stty)
-
-
-def get_cursor_position(to_terminal, from_terminal):
-    with Cbreak(from_terminal):
-        return _inner_get_cursor_position(to_terminal, from_terminal)
-
-
-def _inner_get_cursor_position(to_terminal, from_terminal):
-    query_cursor_position = u"\x1b[6n"
-    to_terminal.write(query_cursor_position)
-    to_terminal.flush()
-
-    def retrying_read():
-        while True:
-            try:
-                c = from_terminal.read(1)
-                if c == '':
-                    raise ValueError("Stream should be blocking - should't"
-                                     " return ''. Returned %r so far", (resp,))
-                return c
-            except IOError:
-                raise ValueError('cursor get pos response read interrupted')
-
-    resp = ''
-    while True:
-        c = retrying_read()
-        resp += c
-        m = re.search('(?P<extra>.*)'
-                      '(?P<CSI>\x1b\[|\x9b)'
-                      '(?P<row>\\d+);(?P<column>\\d+)R', resp, re.DOTALL)
-        if m:
-            row = int(m.groupdict()['row'])
-            col = int(m.groupdict()['column'])
-            extra = m.groupdict()['extra']
-            if extra:  # TODO send these to child process
-                raise ValueError(("Bytes preceding cursor position "
-                                  "query response thrown out:\n%r\n"
-                                  "Pass an extra_bytes_callback to "
-                                  "CursorAwareWindow to prevent this")
-                                 % (extra,))
-            return (row - 1, col - 1)
 
 
 class Terminal(object):
@@ -88,7 +27,8 @@ class Terminal(object):
         self.vt.process(self.t.move(self.initial_top_usable_row, 1))
         self.prev_read = ''
         self.stack = [self.snapshot()]
-        self.set_up_listeners()
+        #self.set_up_listeners()
+        #self.set_up_handlers()
 
     def set_up_listeners(self):
         self.push = socket.socket()
@@ -184,6 +124,21 @@ def main():
     terminal = Terminal(cursor_row=start_row)
     client = LocalClient(terminal)
 
+    def set_up_handlers(self):
+        signal.signal()
+
+    def go_back():
+        terminal.stack.pop()
+        old = terminal.stack[0]
+        terminal.render(old)
+        time.sleep(2)
+        terminal.render(terminal.snapshot())
+
+    def go_back_handler(*args):
+        t = threading.Thread(target=go_back)
+        t.daemon = True
+        t.start()
+
     t1 = threading.Thread(target=render_sometimes)
     t1.daemon = True
     t2 = threading.Thread(target=terminal.wait_for_push)
@@ -192,8 +147,8 @@ def main():
     t3.daemon = True
 
     #t1.start()
-    t2.start()
-    t3.start()
+    #t2.start()
+    #t3.start()
     client.run(sys.argv[1:])
 
 if __name__ == '__main__':
