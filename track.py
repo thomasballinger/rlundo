@@ -48,8 +48,8 @@ class Terminal(object):
     def wait_for_save(self):
         while True:
             self.save.accept()
-            self.stack.append((self.snapshot(), self.sequence_since_last_save))
-            self.sequence_since_last_save = ''
+            self.stack.append((self.snapshot(), self.sequences_since_last_save))
+            self.sequences_since_last_save = ''
 
     def wait_for_undo(self):
         while True:
@@ -63,6 +63,7 @@ class Terminal(object):
     def send(self, data):
         to_process = self.prev_read + data
         processed = self.vt.process(to_process)
+        self.sequences_since_last_save += to_process[:processed]
         self.prev_read = to_process[processed:]
         return len(data)
 
