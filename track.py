@@ -27,28 +27,34 @@ class Terminal(object):
         self.vt.process(self.t.move(self.initial_top_usable_row, 1))
         self.prev_read = ''
         self.stack = [self.snapshot()]
-        #self.set_up_listeners()
-        #self.set_up_handlers()
+        self.sequences_since_last_save = ''
+        self.set_up_listeners()
 
     def set_up_listeners(self):
-        self.push = socket.socket()
-        self.push.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.push.bind(('localhost', 4242))
-        self.push.listen(1)
-        self.pop = socket.socket()
-        self.pop.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.pop.bind(('localhost', 4243))
-        self.pop.listen(1)
+        self.save = socket.socket()
+        self.save.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.save.bind(('localhost', 4242))
+        self.save.listen(1)
+        self.undo = socket.socket()
+        self.undo.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.undo.bind(('localhost', 4243))
+        self.undo.listen(1)
 
-    def wait_for_push(self):
-        while True:
-            self.push.accept()
-            self.stack.append(self.snapshot())
+    def go_back(self):
+        self.stack.pop()
+        old = self.stack[0]
+        self.render(old)
 
-    def wait_for_pop(self):
+    def wait_for_save(self):
         while True:
-            self.pop.accept()
-            self.render(self.stack.pop())
+            self.save.accept()
+            self.stack.append((self.snapshot(), self.sequence_since_last_save))
+            self.sequence_since_last_save = ''
+
+    def wait_for_undo(self):
+        while True:
+            self.undo.accept()
+            self.go_back()
 
     def write(self, data):
         self.stdout.write(data)
@@ -123,21 +129,6 @@ def main():
     start_row, _ = get_cursor_position(sys.stdout, sys.stdin)
     terminal = Terminal(cursor_row=start_row)
     client = LocalClient(terminal)
-
-    def set_up_handlers(self):
-        signal.signal()
-
-    def go_back():
-        terminal.stack.pop()
-        old = terminal.stack[0]
-        terminal.render(old)
-        time.sleep(2)
-        terminal.render(terminal.snapshot())
-
-    def go_back_handler(*args):
-        t = threading.Thread(target=go_back)
-        t.daemon = True
-        t.start()
 
     t1 = threading.Thread(target=render_sometimes)
     t1.daemon = True

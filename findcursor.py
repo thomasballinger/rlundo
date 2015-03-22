@@ -6,6 +6,7 @@ import vt100
 
 from terminal_dsl import split_lines
 
+
 def find_cursor(sequence, height, width):
     r"""Returns (dy, dx) of cursor to new position
 
