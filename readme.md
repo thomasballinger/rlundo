@@ -12,9 +12,11 @@
 
 ##The real thing
 
-- [ ] write simple version that
+- [x] write simple version that
   * ignores resizes
   * ignores linewraps (assumes 1 line == 1 row)
+  * doesn't query cursor
+  * uses relative terminal motions
   * takes instructions from modified readline over sockets
 
 - [ ] set up tests for that simple version
