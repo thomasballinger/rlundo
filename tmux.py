@@ -6,15 +6,15 @@ from terminal_dsl import split_lines
 
 
 def all_contents(pane):
-    return pane.tmux('capture-pane', '-pS', '-10000').stdout
+    return pane.tmux('capture-pane', '-epS', '-10000').stdout
 
 
 def scrollback(pane):
-    return pane.tmux('capture-pane', '-pS', '-10000', '-E', '-1').stdout
+    return pane.tmux('capture-pane', '-epS', '-10000', '-E', '-1').stdout
 
 
 def visible(pane):
-    return pane.tmux('capture-pane', '-p').stdout
+    return pane.tmux('capture-pane', '-ep').stdout
 
 
 def rows(pane, width):
@@ -26,14 +26,11 @@ def visible_after_prompt(pane, expected=u'$', interval=.01, max=1):
     t0 = time.time() 
     while True:
         if time.time() > t0 + max:
-            raise ValueError("prompt didn't appear within max time")
+            raise ValueError("prompt didn't appear within max time: %r" % (screen, ))
         screen = visible(pane)
         if screen[-1] == expected:
             return screen
-        else:
-            print repr(screen[-1]), repr(expected)
         time.sleep(interval)
-
 
 
 def eval_expr(expr):
@@ -51,6 +48,13 @@ def eval_expr(expr):
     data = visible(pane)
     s.kill_server()
     return data
+
+
+def cursor_pos(pane):
+    """Returns zero-indexed cursor position"""
+    process = pane.tmux('list-panes', '-F', '#{pane_height} #{pane_width} #{cursor_x} #{cursor_y}')
+    height, width, x, y = [int(x) for x in process.stdout[0].split()]
+    return y, x
 
 
 class TmuxPane(object):
@@ -87,7 +91,7 @@ class TmuxPane(object):
             pane.set_width(self.width)
         if self.height is not None:
             pane.set_height(self.height)
-        #visible_after_prompt()
+        assert visible_after_prompt(pane) == [u'$']  # wait for shell
         return pane
 
     def __exit__(self, type, value, tb):
@@ -98,11 +102,11 @@ class TmuxPane(object):
 
 if __name__ == '__main__':
     with TmuxPane(10, 10) as t:
+        print cursor_pos(t)
         t.send_keys('true 1234')
-        t.send_keys('true 123456')
-        time.sleep(1)
-        print visible(t)
+        t.send_keys('true 123456789', False)
         t.set_width(5)
+        print cursor_pos(t)
+        t.send_keys('')
         print visible_after_prompt(t)
-
-
+        print cursor_pos(t)

@@ -57,11 +57,11 @@ def master_read(fd):
     return data
 
 
-def run():
-    pity.spawn(['python'],
+def run(argv):
+    pity.spawn(argv,
                master_read=master_read,
                handle_window_size=True)
 
 if __name__ == '__main__':
     listners = [set_up_listener(save, 4242), set_up_listener(restore, 4243)]
-    run()
+    run(sys.argv[1:] if sys.argv[1:] else ['python'])
