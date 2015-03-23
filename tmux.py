@@ -21,7 +21,7 @@ def rows(pane, width):
     return split_lines(visible(pane), width)
 
 
-def visible_after_prompt(pane, expected=u'$', interval=.01, max=1):
+def visible_after_prompt(pane, expected=u'$', interval=.1, max=1):
     """Return the visible region once expected is found on last line"""
     t0 = time.time() 
     while True:
@@ -33,21 +33,8 @@ def visible_after_prompt(pane, expected=u'$', interval=.01, max=1):
         time.sleep(interval)
 
 
-def eval_expr(expr):
-    """
-
-    >>> eval_expr("1 + 1")
-    [u' python', u' 1 + 1']
-    """
-    s = tmuxp.Server()
-    session = s.new_session('testing')
-    window = session.new_window('test')
-    (pane, ) = window.panes
-    pane.send_keys('python')
-    pane.send_keys(expr)
-    data = visible(pane)
-    s.kill_server()
-    return data
+def wait_for_prompt(pane, expected=u'$', interval=.01, max=1):
+    visible_after_prompt(pane, expected=expected, interval=interval, max=max)
 
 
 def cursor_pos(pane):
@@ -91,7 +78,7 @@ class TmuxPane(object):
             pane.set_width(self.width)
         if self.height is not None:
             pane.set_height(self.height)
-        assert visible_after_prompt(pane) == [u'$']  # wait for shell
+        wait_for_prompt(pane)
         return pane
 
     def __exit__(self, type, value, tb):
@@ -102,11 +89,12 @@ class TmuxPane(object):
 
 if __name__ == '__main__':
     with TmuxPane(10, 10) as t:
+        print visible(t)
         print cursor_pos(t)
         t.send_keys('true 1234')
         t.send_keys('true 123456789', False)
         t.set_width(5)
         print cursor_pos(t)
-        t.send_keys('')
+        t.send_keys(' ')
         print visible_after_prompt(t)
         print cursor_pos(t)
