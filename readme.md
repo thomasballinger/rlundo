@@ -1,6 +1,8 @@
 #rlundo
 
 
+
+
 For a simple demo not requiring c compiling, try
 
     $ python rewrite.py python undoablepython.py
@@ -10,6 +12,9 @@ The goal is for this to work with any interpreter, as in
     $ python rewrite.py rlundo /usr/bin/irb
 
 which will work if you compile a new readline
+
+
+![rlundo preview example](http://ballingt.com/assets/rlundopreview.gif)
 
 
 * rlundoable - a patch for readline that makes it fork to save state

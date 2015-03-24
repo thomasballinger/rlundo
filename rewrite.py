@@ -32,8 +32,8 @@ def count_lines(msg):
 
 def restore():
     logger.debug('full output stack: %r' % (outputs, ))
-    lines = outputs.pop()
-    lines += outputs.pop()
+    lines = outputs.pop() if outputs else ''
+    lines += outputs.pop() if outputs else ''
     n = count_lines(lines)
     logger.debug('moving cursor %d lines up for %r' % (n, lines))
     for _ in range(n):
@@ -62,7 +62,8 @@ def set_up_listener(handler, port):
 
 def master_read(fd):
     data = os.read(fd, 1024)
-    outputs[-1] += data
+    if outputs:
+        outputs[-1] += data
     return data
 
 
