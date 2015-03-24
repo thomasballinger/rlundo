@@ -9,7 +9,7 @@ For a simple demo not requiring c compiling, try
 
 The goal is for this to work with any interpreter, as in
 
-    $ python rewrite.py rlundo /usr/bin/irb
+    $ python rlundo.py /usr/bin/irb
 
 which will work if you compile a new readline
 
