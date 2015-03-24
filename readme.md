@@ -174,3 +174,75 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+
+
+
+
+
+
+For a simple demo not requiring, try
+
+    $ python rewrite.py python undoablepython.py
+
+The goal is for this to work with any interpreter, as in
+
+    $ python rewrite.py rlundo /usr/bin/irb
+
+
+
+##Prototype
+
+- [x] run a program in a subprocess, and know what the current state of the terminal screen is.
+- [x] keep track of original cursor starting location
+- [x] take snapshots of terminal state.
+- [x] restore previous snapshots
+  - [x] keep track of number of times scrolled down.
+    - [x] modify doy's vt100 to keep track of scroll_offset
+- [x] start vt100 cursor position where it was when started
+- [x] send signal from rlundo program to snapshot and restore states
+
+##The real thing
+
+- [x] write simple version that
+  * ignores resizes
+  * ignores linewraps (assumes 1 line == 1 row)
+  * doesn't query cursor
+  * uses relative terminal motions
+  * takes instructions from modified readline over sockets
+
+- [ ] set up tests for that simple version
+
+- [ ] set up testing harness: use a GUI terminal emulator 
+  - [ ] programmatically set up tmux
+    - [ ] programmatically set up tmux
+  - [ ] request state of scrollback buffer and screen
+  - [ ] write a simple test
+  - [ ] implement cursor query to discover how cursor moved
+  - [ ] terminal detection via env TERM and database for wrap strategies
+
+- Test cases:
+  - [ ] same screen, no line wrapping
+    - [ ] write test
+    - [ ] test passing
+  - [ ] test case: scroll down, no line wrapping
+    - [ ] write test
+    - [ ] test passing
+  - [ ] test case: same screen, line wrapping
+    - [ ] write test
+    - [ ] test passing
+  - [ ] test case: scroll down, line wrapping
+    - [ ] write test
+    - [ ] test passing
+  - [ ] test case: scroll off of the screen, no line wrapping
+    - [ ] write test
+    - [ ] test passing
+  - [ ] test case: scroll off the screen, line wrapping
+    - [ ] write test
+    - [ ] test passing
+  - [ ] test case: screen resize
+    - [ ] write test
+    - [ ] test passing
+
