@@ -1,3 +1,12 @@
+For a simple demo not requiring, try
+
+    $ python rewrite.py python undoablepython.py
+
+The goal is for this to work with any interpreter, as in
+
+    $ python rewrite.py rlundo /usr/bin/irb
+
+
 
 ##Prototype
 

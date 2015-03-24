@@ -2,6 +2,7 @@ import os
 import socket
 import sys
 import threading
+import logging
 
 import blessings
 from termcast_client import pity
@@ -11,6 +12,9 @@ terminal = blessings.Terminal()
 
 outputs = ['']
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='example.log', level=logging.DEBUG)
+
 
 def write(data):
     sys.stdout.write(data)
@@ -19,6 +23,7 @@ def write(data):
 
 def save():
     outputs.append('')
+    logger.debug('full output stack: %r' % (outputs, ))
 
 
 def count_lines(msg):
@@ -26,7 +31,11 @@ def count_lines(msg):
 
 
 def restore():
-    n = count_lines(outputs.pop())
+    logger.debug('full output stack: %r' % (outputs, ))
+    lines = outputs.pop()
+    lines += outputs.pop()
+    n = count_lines(lines)
+    logger.debug('moving cursor %d lines up for %r' % (n, lines))
     for _ in range(n):
         write(terminal.move_up)
     for _ in range(200):
