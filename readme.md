@@ -84,6 +84,19 @@ to restore previous terminal states
     - [ ] write test
     - [ ] test passing
 
+##rlundoable
+
+- [ ] ruby crashes if ctrl-d (freeing things?)
+- [ ] come up with better ipc than sockets, or check if sockets free
+- [ ] make graphs of memory use, annotated with when GCs happen
+  - [ ] figure out how to measure memory of interpreters
+  - [ ] come up with a reasonable REPL task to benchmark (use other benchmarks?)
+    - [ ] trying out syntax (inc. errors)
+    - [ ] web scraping
+- [ ] figure out how to intercept Python readline
+
+
+
 ---
 
 ##License
