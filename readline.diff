@@ -1,50 +1,39 @@
---- readline-6.3/readline.c	2013-10-28 18:58:06.000000000 +0000
-+++ modified-readline-6.3/readline.c	2015-03-24 19:22:28.862583549 +0000
-@@ -332,7 +332,7 @@
- /* Read a line of input.  Prompt with PROMPT.  An empty PROMPT means
-    none.  A return value of NULL means that EOF was encountered. */
- char *
--readline (prompt)
-+actual_readline (prompt)
-      const char *prompt;
- {
-   char *value;
-@@ -387,6 +387,38 @@
-   return (value);
- }
- 
-+char * last_command = "with no command, so exiting";
-+
-+char *
-+readline (prompt)
-+     const char *prompt;
-+{
-+  char *value;
-+
-+  value = actual_readline(prompt);
-+  if(!strcmp(value, "undo")){
-+    printf("undoing '%s'\n", last_command);
-+    exit(42);
-+  }
-+	pid_t pid = fork();
-+
-+  if (pid == 0) {
-+    last_command = strdup(value);
-+    return value;
-+  } else {
-+    int status;
-+    waitpid(pid, &status, 0);
-+    int exitstatus = WEXITSTATUS(status);
-+
-+    if(exitstatus == 42){
-+      return readline(prompt);
-+    } else {
-+      exit(exitstatus);
-+    }
-+  }
-+}
-+
-+
- #if defined (READLINE_CALLBACKS)
- #  define STATIC_CALLBACK
- #else
+335c335
+< readline (prompt)
+---
+> actual_readline (prompt)
+389a390,423
+> char * last_command = "with no command, so exiting";
+> 
+> char *
+> readline (prompt)
+>      const char *prompt;
+> {
+>   char *value;
+> 
+>   system("nc localhost 4242");
+>   value = actual_readline(prompt);
+>   if(!strcmp(value, "undo")){
+>     //printf("undoing '%s'\n", last_command);
+>     system("nc localhost 4243");
+>     exit(42);
+>   }
+> 	pid_t pid = fork();
+> 
+>   if (pid == 0) {
+>     last_command = strdup(value);
+>     return value;
+>   } else {
+>     int status;
+>     waitpid(pid, &status, 0);
+>     int exitstatus = WEXITSTATUS(status);
+> 
+>     if(exitstatus == 42){
+>       return readline(prompt);
+>     } else {
+>       exit(exitstatus);
+>     }
+>   }
+> }
+> 
+> 
