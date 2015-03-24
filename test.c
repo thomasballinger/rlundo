@@ -24,13 +24,15 @@ int main(){
    //printf("here's the original_readline: %d\n", (int)original_readline);
 
    const char* prompt = "enter a string: ";
-   line = readline(prompt);  // readline allocates space for returned string
-   printf("done calling readline\n");
-   if(line != NULL) { 
-       printf("You entered: %s\n", line);
-       if(!strcmp(line, "undo")){
-         printf("looks like we're using normal readline\n");
-       }
-       free(line);   // but you are responsible for freeing the space
+   while (1) {
+     line = readline(prompt);  // readline allocates space for returned string
+     printf("done calling readline\n");
+     if(line != NULL) {
+         printf("You entered: %s\n", line);
+         if(!strcmp(line, "undo")){
+           printf("looks like we're using normal readline\n");
+         }
+         free(line);   // but you are responsible for freeing the space
+     }
    }
 }
