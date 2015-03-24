@@ -1,8 +1,6 @@
-diff --git a/readline.c b/readline.c
-index 3550b35..8c0a221 100644
---- a/readline.c
-+++ b/readline.c
-@@ -301,7 +301,7 @@ rl_set_prompt (prompt)
+--- readline-6.3/readline.c	2013-10-28 18:58:06.000000000 +0000
++++ modified-readline-6.3/readline.c	2015-03-24 19:22:28.862583549 +0000
+@@ -332,7 +332,7 @@
  /* Read a line of input.  Prompt with PROMPT.  An empty PROMPT means
     none.  A return value of NULL means that EOF was encountered. */
  char *
@@ -11,7 +9,7 @@ index 3550b35..8c0a221 100644
       const char *prompt;
  {
    char *value;
-@@ -351,6 +351,38 @@ readline (prompt)
+@@ -387,6 +387,38 @@
    return (value);
  }
  
@@ -31,7 +29,7 @@ index 3550b35..8c0a221 100644
 +	pid_t pid = fork();
 +
 +  if (pid == 0) {
-+    last_command = value;
++    last_command = strdup(value);
 +    return value;
 +  } else {
 +    int status;
