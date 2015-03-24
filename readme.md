@@ -1,5 +1,49 @@
 #rlundo
 
+
+For a simple demo not requiring c compiling, try
+
+    $ python rewrite.py python undoablepython.py
+
+The goal is for this to work with any interpreter, as in
+
+    $ python rewrite.py rlundo /usr/bin/irb
+
+which will work if you compile a new readline
+
+
+* rlundoable - a patch for readline that makes it fork to save state
+* rewrite.py - a rewinds the terminal state to how it was at the last prompt
+
+
+
+
+##rlundoable
+
+test with 
+
+    $ python rlundo.py /usr/bin/irb
+
+
+##rewrite
+
+test with 
+
+    $ python rewrite.py
+
+and then in another terminal run
+
+    nc localhost 4242
+
+to save terminal states, and
+
+    nc localhost 4243
+
+to restore previous terminal states
+
+
+---
+
 Adds undo to interactive command line programs that use readline.
 Undo is implemented by forking the process every time readline()
 is called to save previous states, and returning to these saved

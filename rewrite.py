@@ -71,6 +71,11 @@ def run(argv):
                master_read=master_read,
                handle_window_size=True)
 
-if __name__ == '__main__':
+
+def run_with_listeners(args):
     listeners = [set_up_listener(save, 4242), set_up_listener(restore, 4243)]
-    run(sys.argv[1:] if sys.argv[1:] else ['python', '-c', "while True: raw_input('>')"])
+    run(args)
+
+
+if __name__ == '__main__':
+    run_with_listeners(sys.argv[1:] if sys.argv[1:] else ['python', '-c', "while True: raw_input('>')"])
