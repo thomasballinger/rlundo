@@ -2,6 +2,7 @@ import tempfile
 import time
 import tmuxp
 
+
 def all_contents(pane):
     return pane.tmux('capture-pane', '-epS', '-10000').stdout
 
@@ -59,7 +60,6 @@ def send_command(pane, cmd, enter=True, prompt=u'$'):
     row, col = cursor_pos(pane)
     pane.tmux('send-keys', cmd)
     wait_until_cursor_moves(pane, row, col)
-    row, _ = cursor_pos(pane)
     pane.enter()
     wait_for_prompt(pane, expected=prompt)
 
@@ -84,12 +84,6 @@ class TmuxPane(object):
         self.bash_config.write(self.bash_config_contents())
         self.bash_config.flush()
 
-        #self.server = tmuxp.Server(socket_name='testing',
-        #                           config_file=self.tmux_config.name)
-        #try:
-        #    self.session = self.server.new_session('testing')
-        #except tmuxp.exc.TmuxSessionExists:
-        #    self.session = self.server.findWhere({"session_name": "testing"})
         self.server = tmuxp.Server()
         self.session = self.server.sessions[0]
         self.server.tmux('set', 'automatic-rename', 'on')
@@ -112,7 +106,6 @@ class TmuxPane(object):
         self.bash_config.close()
         self.tmux_config.close()
         self.window.kill_window()
-        #self.server.kill_server()
 
 if __name__ == '__main__':
     with TmuxPane(10, 10) as t:
