@@ -98,7 +98,9 @@ to restore previous terminal states
   - [ ] come up with a reasonable REPL task to benchmark (use other benchmarks?)
     - [ ] trying out syntax (inc. errors)
     - [ ] web scraping
+- [ ] use ctrl key instead of typing 'undo'
 - [ ] figure out how to intercept Python readline
+- [ ] solution for haskeline
 
 
 
