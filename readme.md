@@ -56,6 +56,12 @@ to restore previous terminal states
   * takes instructions from modified readline over sockets
 
 - [x] set up tests for that simple version
+- [x] decide what correct behavior for a scroll-up that goes off screen is
+  - "output inconsistent" added to scrollback
+  - save history
+    [ ] record logical lines of history in addition to rows
+  - put new prompt in middle row if there's enough history to fill out above it
+  - put new prompt higher up if not enough history
 
 - [ ] set up testing harness: use Tmux
   - [x] programmatically set up tmux
@@ -84,6 +90,9 @@ to restore previous terminal states
     - [ ] test passing
   - [ ] test case: scroll off the screen, line wrapping
     - [ ] write test
+    - [ ] test passing
+  - [ ] test case: undo would move cursor above screen
+    - [x] write test
     - [ ] test passing
   - [ ] test case: screen resize
     - [ ] write test
