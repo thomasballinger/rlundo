@@ -55,13 +55,13 @@ def wait_until_cursor_moves(pane, row, col, interval=.02, max=1):
         time.sleep(interval)
 
 
-def send_command(pane, cmd, enter=True):
+def send_command(pane, cmd, enter=True, prompt=u'$'):
     row, col = cursor_pos(pane)
     pane.tmux('send-keys', cmd)
     wait_until_cursor_moves(pane, row, col)
     row, _ = cursor_pos(pane)
     pane.enter()
-    wait_for_prompt(pane)
+    wait_for_prompt(pane, expected=prompt)
 
 
 class TmuxPane(object):
