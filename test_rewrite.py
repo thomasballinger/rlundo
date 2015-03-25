@@ -22,56 +22,6 @@ def restore(t):
     t.tmux('send-keys', '>')
 
 
-class TestTmux(unittest.TestCase):
-    def test_send_command(self):
-        with tmux.TmuxPane(20, 20) as t:
-            tmux.send_command(t, 'sleep .1; echo hi')
-            self.assertEqual(tmux.visible(t), ['$sleep .1; echo hi',
-                                               'hi',
-                                               '$'])
-
-    def test_simple(self):
-        with tmux.TmuxPane(10, 10) as t:
-            t.send_keys('true 1')
-            self.assertEqual(tmux.visible(t), ['$ true 1',
-                                               '$'])
-            t.send_keys('true 2')
-            self.assertEqual(tmux.visible(t), ['$ true 1',
-                                               '$ true 2',
-                                               '$'])
-
-    def test_lines_wrap(self):
-        """lines and cursor position wrap
-
-        This is the reason we're using tmux and not vt100 emulator"""
-        with tmux.TmuxPane(10, 10) as t:
-            pass
-
-#    def test_resize(self):
-#        """lines and cursor pos wrap, reported by line
-#
-#        resizes happen immediately
-#        resizes never move the cursor down
-#        trailing whitespace is annoyingly ignored
-#        send_keys calls don't block
-#        """
-#        with tmux.TmuxPane(10, 10) as t:
-#            self.assertEqual(tmux.cursor_pos(t), (0, 1))
-#            t.send_keys('true 1234')
-#            t.send_keys('true 123456789')
-#            time.sleep(1)
-#            self.assertEqual(tmux.cursor_pos(t), (4, 1))
-#            t.set_width(5)
-#            self.assertEqual(tmux.cursor_pos(t), (4, 1))
-#            t.send_keys('')
-#            self.assertEqual(tmux.visible_after_prompt(t),
-#                             ['$ tru', 'e 123', '4', '$ tru', 'e 123', '45678', '9', '$'])
-#
-#            print tmux.visible(t)
-#            self.fail()
-
-
-
 class TestRunWithTmux(unittest.TestCase):
 
     def test_running_rewrite(self):

@@ -21,12 +21,12 @@ def visible_after_prompt(pane, expected=u'$', interval=.1, max=1):
         if time.time() > t0 + max:
             raise ValueError("prompt didn't appear within max time: %r" % (screen, ))
         screen = visible(pane)
-        if screen[-1] == expected:
+        if screen and screen[-1] == expected:
             return screen
         time.sleep(interval)
 
 
-def wait_for_prompt(pane, expected=u'$', interval=.01, max=1):
+def wait_for_prompt(pane, expected=u'$', interval=.01, max=2):
     visible_after_prompt(pane, expected=expected, interval=interval, max=max)
 
 
