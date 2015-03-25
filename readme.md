@@ -74,13 +74,13 @@ to restore previous terminal states
     - [ ] write test
     - [ ] test passing
   - [ ] test case: scroll down, no line wrapping
-    - [ ] write test
-    - [ ] test passing
+    - [x] write test
+    - [x] test passing
   - [ ] test case: scroll down, line wrapping
     - [ ] write test
     - [ ] test passing
   - [ ] test case: scroll off of the screen, no line wrapping
-    - [ ] write test
+    - [x] write test
     - [ ] test passing
   - [ ] test case: scroll off the screen, line wrapping
     - [ ] write test

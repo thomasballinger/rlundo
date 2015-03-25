@@ -47,25 +47,42 @@ class TestRunWithTmux(unittest.TestCase):
             self.assertEqual(tmux.cursor_pos(t), (1, 1))
 
     def test_scroll_down(self):
+        with tmux.TmuxPane(40, 8) as t:
+            tmux.send_command(t, 'true')
+            tmux.send_command(t, 'true')
+            tmux.send_command(t, 'true')
+            tmux.send_command(t, 'true')
+            tmux.send_command(t, 'true')
+            tmux.send_command(t, 'python rewrite.py', prompt=u'>')
+            self.assertEqual(tmux.visible(t), ['$true']*5 + ['$python rewrite.py', '>'])
+            self.assertEqual(tmux.cursor_pos(t), (6, 1))
+            save()
+            tmux.send_command(t, 'hello!', prompt=u'>')
+            save()
+
+            tmux.send_command(t, 'hi again!', prompt=u'>')
+            save()
+            self.assertEqual(tmux.visible(t),
+                             ['$true']*4 + ['$python rewrite.py', '>hello!', '>hi again!', '>'])
+            restore(t)
+
+            self.assertEqual(tmux.visible_after_prompt(t, '>'),
+                             ['$true']*4 + ['$python rewrite.py', '>hello!', '>'])
+            self.assertEqual(tmux.cursor_pos(t), (6, 1))
+
+    def test_scroll_off(self):
         with tmux.TmuxPane(40, 3) as t:
             tmux.send_command(t, 'python rewrite.py', prompt=u'>')
             self.assertEqual(tmux.visible(t), ['$python rewrite.py', '>'])
-            time.sleep(2)
             self.assertEqual(tmux.cursor_pos(t), (1, 1))
-            time.sleep(2)
             tmux.send_command(t, 'hello!', prompt=u'>')
-            time.sleep(2)
             save()
-            time.sleep(2)
 
             tmux.send_command(t, 'hi again!', prompt=u'>')
-            time.sleep(2)
             self.assertEqual(tmux.visible(t),
                              ['>hello!', '>hi again!', '>'])
-            time.sleep(2)
             restore(t)
 
             self.assertEqual(tmux.visible_after_prompt(t, '>'),
                              ['>hi again!', '>'])
-            time.sleep(2)
             self.assertEqual(tmux.cursor_pos(t), (1, 1))
