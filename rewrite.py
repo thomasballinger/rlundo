@@ -31,6 +31,11 @@ def count_lines(msg):
     return msg.count('\n')
 
 
+def history(sequences):
+    full = ''.join(sequences)
+    return full.split('\n')
+
+
 def restore():
     logger.debug('full output stack: %r' % (outputs, ))
     lines_between_saves = outputs.pop() if outputs else ''
@@ -55,9 +60,9 @@ def restore():
         for _ in range(terminal.height - 1):
             write(terminal.move_up)
         middle = terminal.height // 2
-        for _ in range(middle):
+
+        for line in history(''.join(outputs))[-middle:]:
             write('>hi there!\n\r')
-            write(terminal.clear_eos)
 
     else:
         logger.debug('moving cursor %d lines up for %r' % (n, lines))

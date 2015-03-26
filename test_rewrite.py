@@ -8,6 +8,7 @@ import unittest
 
 import terminal_dsl
 import tmux
+import rewrite
 
 
 def save():
@@ -23,6 +24,20 @@ def restore(t):
     assert '' == s.recv(100)
     t.tmux('send-keys', '>')
     time.sleep(.1)
+
+
+class TestRewriteHelpers(unittest.TestCase):
+    def test_history(self):
+        self.assertEqual(rewrite.history(['>>> print "hello\\n"*3\nhello\nhello\nhello\n'
+                                          '>>> 1 + 1\n2\n',
+                                          '>>> ']),
+                         ['>>> print "hello\\n"*3',
+                          'hello',
+                          'hello',
+                          'hello',
+                          '>>> 1 + 1',
+                          '2',
+                          '>>> '])
 
 
 class TestRunWithTmux(unittest.TestCase):
