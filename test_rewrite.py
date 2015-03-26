@@ -172,8 +172,7 @@ class TestRunWithTmux(unittest.TestCase):
             self.assertEqual(tmux.cursor_pos(t), (1, 1))
 
 
-class TextDiagramsWithTmux(unittest.TestCase):
-    @unittest.skip
+class TestDiagramsWithTmux(unittest.TestCase):
     def test_simple_undo(self):
         diagram = '''
             before             after
@@ -193,7 +192,8 @@ class TextDiagramsWithTmux(unittest.TestCase):
         states = dict(terminal_dsl.parse_term_state(x)
                       for x in terminal_dsl.divide_term_states(diagram))
         with UndoScenario(states['before']) as t:
-            restore()
+            UndoScenario.initialize(t, states['before'])
+            restore(t)
             self.assertEqual(tmux.all_contents(t), states['after'].lines)
 
 
@@ -283,8 +283,8 @@ class UndoScenario(tmux.TmuxPane):
             else:
                 row, col = tmux.cursor_pos(pane)
                 pane.tmux('send-keys', line)
-                pane.enter()
                 tmux.wait_until_cursor_moves(pane, row, col)
+                pane.enter()
 
         return pane
 
