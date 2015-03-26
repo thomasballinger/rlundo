@@ -59,10 +59,10 @@ to restore previous terminal states
 - [x] decide what correct behavior for a scroll-up that goes off screen is
   - "output inconsistent" added to scrollback
   - save history
-    [ ] record logical lines of history in addition to rows
-  - put new prompt in middle row if there's enough history to fill out above it
-  - put new prompt higher up if not enough history
-
+    [x] calculate logical lines of history from to rows
+  - [x] put new prompt in middle row if there's enough history to fill out above it
+  - [x] put new prompt higher up if not enough history
+- [ ] fix pity to allow window resizing
 - [ ] set up testing harness: use Tmux
   - [x] programmatically set up tmux
     - [x] programmatically set up terminal state from a diagram

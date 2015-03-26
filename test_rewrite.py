@@ -178,8 +178,6 @@ class TestDiagramsWithTmux(unittest.TestCase):
     def assert_undo(self, diagram):
         states = [terminal_dsl.parse_term_state(x)[1]
                   for x in terminal_dsl.divide_term_states(diagram)]
-        print states[0]
-        print states[1]
 
         with UndoScenario(states[0]) as t:
             UndoScenario.initialize(t, states[0])
@@ -213,7 +211,6 @@ class TestDiagramsWithTmux(unittest.TestCase):
         +-----------+      +-----------+
         ''')
 
-    @unittest.skip
     def test_simple_resize(self):
         self.assert_undo('''
             before              after
