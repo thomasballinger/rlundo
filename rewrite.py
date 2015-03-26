@@ -6,6 +6,7 @@ import logging
 
 import blessings
 from termcast_client import pity
+from findcursor import get_cursor_position
 
 # version 1: record sequences, guess how many lines to go back up
 terminal = blessings.Terminal()
@@ -32,15 +33,39 @@ def count_lines(msg):
 
 def restore():
     logger.debug('full output stack: %r' % (outputs, ))
-    lines = outputs.pop() if outputs else ''
-    lines += outputs.pop() if outputs else ''
+    lines_between_saves = outputs.pop() if outputs else ''
+    lines_after_save = outputs.pop() if outputs else ''
+    lines = lines_between_saves + lines_after_save
     n = count_lines(lines)
-    logger.debug('moving cursor %d lines up for %r' % (n, lines))
-    for _ in range(n):
-        write(terminal.move_up)
-    for _ in range(200):
-        write(terminal.move_left)
-    write(terminal.clear_eos)
+    lines_available, _ = get_cursor_position(sys.stdout, sys.stdin)
+    logger.debug('lines move: %d lines_available: %d' % (n, lines_available))
+    if n > lines_available:
+        for _ in range(200):
+            write(terminal.move_left)
+        write(terminal.clear_eol)
+        for _ in range(lines_available):
+            write(terminal.move_up)
+            write(terminal.clear_eol)
+        write('#<---History contiguity broken by rewind--->\n')
+        for _ in range(terminal.height - 2):
+            write(terminal.move_down)
+        for _ in range(200):
+            write(terminal.move_left)
+        write('\n')
+        for _ in range(terminal.height - 1):
+            write(terminal.move_up)
+        middle = terminal.height // 2
+        for _ in range(middle):
+            write('>hi there!\n\r')
+            write(terminal.clear_eos)
+
+    else:
+        logger.debug('moving cursor %d lines up for %r' % (n, lines))
+        for _ in range(n):
+            write(terminal.move_up)
+        for _ in range(200):
+            write(terminal.move_left)
+        write(terminal.clear_eos)
 
 
 def set_up_listener(handler, port):

@@ -2,26 +2,6 @@ import termios
 import tty
 import re
 
-import vt100
-
-from terminal_dsl import split_lines
-
-
-def find_cursor(sequence, height, width):
-    r"""Returns (dy, dx) of cursor to new position
-
-    >>> find_cursor('abc\n\rdef', 10, 10)
-    (1, 3)
-    """
-    vt = vt100.vt100(rows=height, cols=width)
-    vt.process(sequence)
-    lines = vt.window_contents().splitlines()
-    cursor_line, cursor_offset = vt.cursor_position()
-    rows = split_lines(lines, width)[:cursor_line]
-
-    row, offset = divmod(len(lines[cursor_line][:cursor_offset+1]), width)
-    return (len(rows) + vt._screen._scroll_offset + row, offset)
-
 
 class Cbreak(object):
 

@@ -69,7 +69,10 @@ to restore previous terminal states
   - [x] request state of scrollback buffer and screen
   - [x] write a simple test
   - [x] implement cursor query to discover how cursor moved
-  - [ ] figure out if wrapping works (I'm suspicious it doesn't,
+    - [x] test cursor query with tmux
+  - [x] count lines from sequence
+    - [ ] also use width to calculate
+  - [x] figure out if wrapping works (I'm suspicious it doesn't,
         and we'll need calculate wrapping ourselves
 
 - Test cases:
@@ -87,12 +90,12 @@ to restore previous terminal states
     - [ ] test passing
   - [ ] test case: scroll off of the screen, no line wrapping
     - [x] write test
-    - [ ] test passing
+    - [x] test passing
   - [ ] test case: scroll off the screen, line wrapping
     - [ ] write test
     - [ ] test passing
-  - [ ] test case: undo would move cursor above screen
-    - [x] write test
+  - [ ] test case: undo would move cursor above screen, line wrapping
+    - [ ] write test
     - [ ] test passing
   - [ ] test case: screen resize
     - [ ] write test

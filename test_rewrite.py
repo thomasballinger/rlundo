@@ -1,8 +1,9 @@
 from __future__ import unicode_literals
 
+import re
 import socket
-import unittest
 import time
+import unittest
 
 import tmux
 
@@ -18,11 +19,26 @@ def restore(t):
     s = socket.socket()
     s.connect(('localhost', 4243))
     assert '' == s.recv(100)
-    #time.sleep(.1)
     t.tmux('send-keys', '>')
+    time.sleep(.1)
 
 
 class TestRunWithTmux(unittest.TestCase):
+
+    def test_cursor_query(self):
+        with tmux.TmuxPane(40, 10) as t:
+            tmux.send_command(t, 'true 1234')
+            tmux.send_command(t, 'true 1234')
+            program = "import findcursor, sys; print(findcursor.get_cursor_position(sys.stdout, sys.stdin))"
+            tmux.send_command(t, 'python -c "%s"' % (program, ))
+            lines = tmux.visible(t)
+            while lines[-1] == u'$':
+                lines.pop()
+            line = lines[-1]
+            self.assertTrue(len(line) > 1, repr(line))
+            row, col = [int(x) for x in re.search(
+                r'[(](\d+), (\d+)[)]', line).groups()]
+            self.assertEqual(tmux.cursor_pos(t), (row+1, col+1))
 
     def test_running_rewrite(self):
         with tmux.TmuxPane(40, 10) as t:
@@ -106,7 +122,7 @@ class TestRunWithTmux(unittest.TestCase):
         or cursor position to know that we've run out of space.
         I think we don't need an emulator yet - just cursor querying should do.
         """
-        with tmux.TmuxPane(40, 3) as t:
+        with tmux.TmuxPane(60, 3) as t:
             tmux.send_command(t, 'python rewrite.py', prompt=u'>')
             save()
             self.assertEqual(tmux.visible(t), ['$python rewrite.py', '>'])
@@ -119,23 +135,23 @@ class TestRunWithTmux(unittest.TestCase):
             tmux.send_command(t, 'hi again!', prompt=u'>')
             tmux.send_command(t, 'hey!', prompt=u'>')
             save()
-            self.assertEqual(tmux.visible(t),
-                             ['>hi again!',
-                              '>hey!',
-                              '>'])
+            time.sleep(1)
             self.assertEqual(tmux.scrollback(t),
                              ['$python rewrite.py',
                               '>hi there!',
                               '>hello!'])
-            restore(t)
-            self.assertEqual(tmux.visible_after_prompt(t, '>'),
-                             ['>hi there!',
+            self.assertEqual(tmux.visible(t),
+                             ['>hi again!',
+                              '>hey!',
                               '>'])
-            self.assertEqual(tmux.cursor_pos(t), (0, 1))
+            restore(t)
+            time.sleep(1)
             self.assertEqual(tmux.scrollback(t),
                              ['$python rewrite.py',
                               '>hi there!',
                               '>hello!',
-                              '>hi again!',
-                              '>hey!',
                               '#<---History contiguity broken by rewind--->'])
+            self.assertEqual(tmux.visible_after_prompt(t, '>'),
+                             ['>hi there!',
+                              '>'])
+            self.assertEqual(tmux.cursor_pos(t), (1, 1))
