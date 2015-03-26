@@ -172,6 +172,31 @@ class TestRunWithTmux(unittest.TestCase):
             self.assertEqual(tmux.cursor_pos(t), (1, 1))
 
 
+class TextDiagramsWithTmux(unittest.TestCase):
+    @unittest.skip
+    def test_simple_undo(self):
+        diagram = '''
+            before             after
+        +-----------+      +-----------+
+        |$rw        |      |$rw        |
+        |>1 + 1     |      |>1 + 1     |
+        |usually 2  |      |usually 2  |
+        +-----------+      +-----------+
+        |>2 + 2     |      |>2 + 2     |
+        |notquite 4 |      |notquite 4 |
+        |>3         |      |>@         |
+        |3          |      ~           ~
+        |>@         |      ~           ~
+        ~           ~      ~           ~
+        +-----------+      +-----------+
+        '''
+        states = dict(terminal_dsl.parse_term_state(x)
+                      for x in terminal_dsl.divide_term_states(diagram))
+        with UndoScenario(states['before']) as t:
+            restore()
+            self.assertEqual(tmux.all_contents(t), states['after'].lines)
+
+
 class UndoScenario(tmux.TmuxPane):
     def bash_config_contents(self):
         return """
@@ -202,7 +227,7 @@ class UndoScenario(tmux.TmuxPane):
         >>> termstate = terminal_dsl.TerminalState(
         ...     ['>a', 'b', 'c', '>d', 'e', '>'], cursor_line=5,
         ...     cursor_offset=1, width=10, height=10, history_height=0)
-        >>> validate_termstate(termstate)
+        >>> UndoScenario.validate_termstate(termstate)
         Traceback (most recent call last):
             ...
         ValueError: termstate doesn't start with a call to rw
@@ -225,15 +250,19 @@ class UndoScenario(tmux.TmuxPane):
         ...     ['$rw', '>a', 'b', 'c', '>d', 'e', '>'], cursor_line=5,
         ...     cursor_offset=1, width=10, height=10, history_height=0)
         >>> with UndoScenario(termstate) as t:
+        ...     UndoScenario.initialize(t, termstate)
         ...     print tmux.visible_after_prompt(t, expected=u'>')
-        ['$rw', '>a', 'b', 'c', '>d', 'e', '>']
+        [u'$rw', u'>a', u'b', u'c', u'>d', u'e', u'>']
         """
         self.check_port(4242)
         self.check_port(4243)
         self.python_script = self.tempfile(self.python_script_contents())
-        pane = tmux.TmuxPane.__enter__(self)
+        return tmux.TmuxPane.__enter__(self)
 
-        lines = self.termstate.lines[:]
+    @classmethod
+    def initialize(cls, pane, termstate):
+
+        lines = termstate.lines[:]
         assert lines.pop(0) == '$rw'
         tmux.send_command(pane, 'rw', prompt=u'>')
         save()
@@ -243,7 +272,7 @@ class UndoScenario(tmux.TmuxPane):
         pane.enter()
         tmux.wait_until_cursor_moves(pane, 1, 1)
         for i, line in enumerate(lines):
-            if i == self.termstate.cursor_line:
+            if i == termstate.cursor_line:
                 assert len(lines) == i - 1
                 pane.tmux('send-keys', line)
             elif line.startswith('>'):
@@ -267,6 +296,7 @@ class TestUndoScenario(unittest.TestCase):
             lines, cursor_line=6, cursor_offset=1,
             width=10, height=10, history_height=0)
         with UndoScenario(termstate) as t:
+            UndoScenario.initialize(t, termstate)
             output = tmux.visible(t)
             print output
             print tmux.all_contents(t)
