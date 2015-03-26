@@ -65,7 +65,7 @@ to restore previous terminal states
 
 - [ ] set up testing harness: use Tmux
   - [x] programmatically set up tmux
-    - [ ] programmatically set up terminal state from a diagram
+    - [x] programmatically set up terminal state from a diagram
   - [x] request state of scrollback buffer and screen
   - [x] write a simple test
   - [x] implement cursor query to discover how cursor moved
@@ -74,6 +74,7 @@ to restore previous terminal states
     - [ ] also use width to calculate
   - [x] figure out if wrapping works (I'm suspicious it doesn't,
         and we'll need calculate wrapping ourselves
+  - [ ] slow mode: does tmux test visible, with delay
 
 - Test cases:
   - [x] same screen, no line wrapping

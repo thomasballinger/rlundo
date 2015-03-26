@@ -4,6 +4,7 @@ import unittest
 import time
 
 import tmux
+import terminal_dsl
 
 
 class TestTmux(unittest.TestCase):

@@ -62,7 +62,8 @@ def send_command(pane, cmd, enter=True, prompt=u'$', maxtime=2):
     row, col = cursor_pos(pane)
     pane.tmux('send-keys', cmd)
     wait_until_cursor_moves(pane, row, col)
-    pane.enter()
+    if enter:
+        pane.enter()
     wait_for_prompt(pane, expected=prompt, max=maxtime)
 
 
