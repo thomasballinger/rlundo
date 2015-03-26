@@ -173,8 +173,31 @@ class TestRunWithTmux(unittest.TestCase):
 
 
 class TestDiagramsWithTmux(unittest.TestCase):
+    maxDiff = 10000
+
+    def assert_undo(self, diagram):
+        states = [terminal_dsl.parse_term_state(x)[1]
+                  for x in terminal_dsl.divide_term_states(diagram)]
+        print states[0]
+        print states[1]
+
+        with UndoScenario(states[0]) as t:
+            UndoScenario.initialize(t, states[0])
+            for before, after in zip(states[:-1], states[1:]):
+                self.resize(before, after, t)
+                if self.should_undo(before, after):
+                    restore(t)
+                self.assertEqual(tmux.all_contents(t), states[1].lines)
+
+    def resize(self, before, after, t):
+        tmux.stepwise_resize_width(t, after.width)
+        tmux.stepwise_resize_height(t, after.height)
+
+    def should_undo(self, s1, s2):
+        return len(s1.lines) > len(s2.lines)
+
     def test_simple_undo(self):
-        diagram = '''
+        self.assert_undo('''
             before             after
         +-----------+      +-----------+
         |$rw        |      |$rw        |
@@ -188,14 +211,25 @@ class TestDiagramsWithTmux(unittest.TestCase):
         |>@         |      ~           ~
         ~           ~      ~           ~
         +-----------+      +-----------+
-        '''
-        states = dict(terminal_dsl.parse_term_state(x)
-                      for x in terminal_dsl.divide_term_states(diagram))
-        with UndoScenario(states['before']) as t:
-            UndoScenario.initialize(t, states['before'])
-            restore(t)
-            self.assertEqual(tmux.all_contents(t), states['after'].lines)
+        ''')
 
+    @unittest.skip
+    def test_simple_resize(self):
+        self.assert_undo('''
+            before              after
+        +-----------+      +--------------+
+        |$rw        |      |$rw           |
+        |>1 + 1     |      |>1 + 1        |
+        |usually 2  |      |usually 2     |
+        +-----------+      +--------------+
+        |>2 + 2     |      |>2 + 2        |
+        |notquite 4 |      |notquite 4    |
+        |>3         |      |>3            |
+        |3          |      |3             |
+        |>@         |      |>@            |
+        ~           ~      ~              ~
+        +-----------+      +--------------+
+        ''')
 
 class UndoScenario(tmux.TmuxPane):
     def bash_config_contents(self):

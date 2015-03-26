@@ -1,5 +1,7 @@
 import tempfile
 import time
+from functools import partial
+
 import tmuxp
 
 
@@ -31,11 +33,72 @@ def wait_for_prompt(pane, expected=u'$', interval=.01, max=2):
     visible_after_prompt(pane, expected=expected, interval=interval, max=max)
 
 
+def wait_for_condition(pane, final, query, condition=lambda x, y: x == y,
+                       interval=0.01, max=1):
+    """Poll for a condition to be true, returning once it is.
+
+    condition takes a response to the query and a final value, returns True if done waiting
+    query is a function which returns a value when called on pane
+    final is the value we're looking for"""
+    t0 = time.time()
+    while True:
+        if time.time() > t0 + max:
+            raise ValueError("contition was never true within max time: cond(%r, %r)" % (last, final))
+        last = query(pane)
+        if condition(last, final):
+            break
+        time.sleep(interval)
+
+
 def cursor_pos(pane):
     """Returns zero-indexed cursor position"""
     process = pane.tmux('list-panes', '-F', '#{pane_height} #{pane_width} #{cursor_x} #{cursor_y}')
     height, width, x, y = [int(x) for x in process.stdout[0].split()]
     return y, x
+
+
+def width(pane):
+    process = pane.tmux('list-panes', '-F', '#{pane_height} #{pane_width} #{cursor_x} #{cursor_y}')
+    height, width, x, y = [int(x) for x in process.stdout[0].split()]
+    return width
+
+
+def height(pane):
+    process = pane.tmux('list-panes', '-F', '#{pane_height} #{pane_width} #{cursor_x} #{cursor_y}')
+    height, width, x, y = [int(x) for x in process.stdout[0].split()]
+    return height
+
+
+wait_for_width = partial(wait_for_condition, query=width)
+wait_for_height = partial(wait_for_condition, query=height)
+
+
+def stepwise_resize_width(pane, final_width):
+
+    initial = width(pane)
+    if initial < final_width:
+        for _ in range(final_width - initial):
+            pane.tmux('resize-pane', '-R', str(1))
+    elif initial > final_width:
+        for _ in range(initial - final_width):
+            pane.tmux('resize-pane', '-L', str(1))
+    else:
+        return
+    wait_for_width(pane, final_width)
+
+
+def stepwise_resize_height(pane, final_height):
+
+    initial = height(pane)
+    if initial < final_height:
+        for _ in range(final_height - initial):
+            pane.tmux('resize-pane', '-D', str(1))
+    elif initial > final_height:
+        for _ in range(initial - final_height):
+            pane.tmux('resize-pane', '-U', str(1))
+    else:
+        return
+    wait_for_height(pane, final_height)
 
 
 def window_name(pane):
