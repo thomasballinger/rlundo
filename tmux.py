@@ -56,7 +56,9 @@ def wait_until_cursor_moves(pane, row, col, interval=.02, max=1):
         time.sleep(interval)
 
 
-def send_command(pane, cmd, enter=True, prompt=u'$', maxtime=5):
+def send_command(pane, cmd, enter=True, prompt=u'$', maxtime=2):
+    if not isinstance(enter, bool):
+        raise ValueError("enter should be a bool, got %r" % (enter, ))
     row, col = cursor_pos(pane)
     pane.tmux('send-keys', cmd)
     wait_until_cursor_moves(pane, row, col)
@@ -68,6 +70,7 @@ class TmuxPane(object):
     def __init__(self, width=None, height=None):
         self.width = width
         self.height = height
+        self.tempfiles_to_close = []
 
     def tmux_config_contents(self):
         return """"""
@@ -76,13 +79,16 @@ class TmuxPane(object):
         return """export PS1='$'
     """
 
+    def tempfile(self, contents):
+        tmp = tempfile.NamedTemporaryFile()
+        self.tempfiles_to_close.append(tmp)
+        tmp.write(contents)
+        tmp.flush()
+        return tmp
+
     def __enter__(self):
-        self.tmux_config = tempfile.NamedTemporaryFile()
-        self.tmux_config.write(self.tmux_config_contents())
-        self.tmux_config.flush()
-        self.bash_config = tempfile.NamedTemporaryFile()
-        self.bash_config.write(self.bash_config_contents())
-        self.bash_config.flush()
+        self.tmux_config = self.tempfile(self.tmux_config_contents())
+        self.bash_config = self.tempfile(self.bash_config_contents())
 
         self.server = tmuxp.Server()
         self.session = self.server.sessions[0]
@@ -103,8 +109,8 @@ class TmuxPane(object):
         return pane
 
     def __exit__(self, type, value, tb):
-        self.bash_config.close()
-        self.tmux_config.close()
+        for file in self.tempfiles_to_close:
+            file.close()
         self.window.kill_window()
 
 if __name__ == '__main__':
