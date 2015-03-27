@@ -1,8 +1,11 @@
+from functools import partial
+import sys
 import tempfile
 import time
-from functools import partial
 
 import tmuxp
+
+py2 = sys.version_info.major == 2
 
 
 def all_contents(pane):
@@ -146,7 +149,10 @@ class TmuxPane(object):
     def tempfile(self, contents):
         tmp = tempfile.NamedTemporaryFile()
         self.tempfiles_to_close.append(tmp)
-        tmp.write(contents)
+        if py2:
+            tmp.write(contents)
+        else:
+            tmp.write(contents.encode('utf8'))
         tmp.flush()
         return tmp
 
@@ -179,16 +185,16 @@ class TmuxPane(object):
 
 if __name__ == '__main__':
     with TmuxPane(10, 10) as t:
-        print visible(t)
-        print cursor_pos(t)
+        print(visible(t))
+        print(cursor_pos(t))
         t.send_keys('true 1234')
         t.send_keys('true 123456789', False)
-        print visible(t)
+        print(visible(t))
         t.set_width(5)
-        print 'change width to 5'
-        print visible(t)
-        print cursor_pos(t)
+        print('change width to 5')
+        print(visible(t))
+        print(cursor_pos(t))
         t.send_keys(' ')
-        print visible_after_prompt(t)
-        print visible(t)
-        print cursor_pos(t)
+        print(visible_after_prompt(t))
+        print(visible(t))
+        print(cursor_pos(t))

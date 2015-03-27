@@ -18,24 +18,24 @@ import rewrite
 def save():
     s = socket.socket()
     s.connect(('localhost', 4242))
-    assert '' == s.recv(100)
+    assert b'' == s.recv(100)
 
 
 def restore(t):
     """Pretend to be the program we're undoing and print prompt"""
     s = socket.socket()
     s.connect(('localhost', 4243))
-    assert '' == s.recv(100)
+    assert b'' == s.recv(100)
     t.tmux('send-keys', '>')
     time.sleep(.1)
 
 
 class TestRewriteHelpers(unittest.TestCase):
     def test_history(self):
-        self.assertEqual(rewrite.history(['>>> print "hello\\n"*3\nhello\nhello\nhello\n'
+        self.assertEqual(rewrite.history(['>>> print("hello\\n"*3)\nhello\nhello\nhello\n',
                                           '>>> 1 + 1\n2\n',
                                           '>>> ']),
-                         ['>>> print "hello\\n"*3',
+                         ['>>> print("hello\\n"*3)',
                           'hello',
                           'hello',
                           'hello',
@@ -182,7 +182,6 @@ class TestDiagramsWithTmux(unittest.TestCase):
     def assert_undo(self, diagram):
         states = [terminal_dsl.parse_term_state(x)[1]
                   for x in terminal_dsl.divide_term_states(diagram)]
-        print states
         with UndoScenario(states[0]) as t:
             UndoScenario.initialize(t, states[0])
             for before, after in zip(states[:-1], states[1:]):
@@ -304,7 +303,7 @@ class UndoScenario(tmux.TmuxPane):
         ...     cursor_offset=1, width=10, height=10, history_height=0)
         >>> with UndoScenario(termstate) as t:
         ...     UndoScenario.initialize(t, termstate)
-        ...     print tmux.visible_after_prompt(t, expected=u'>')
+        ...     print(tmux.visible_after_prompt(t, expected=u'>'))
         [u'$rw', u'>a', u'b', u'c', u'>d', u'e', u'>']
         """
         self.check_port(4242)
@@ -351,6 +350,4 @@ class TestUndoScenario(unittest.TestCase):
         with UndoScenario(termstate) as t:
             UndoScenario.initialize(t, termstate)
             output = tmux.visible(t)
-            print output
-            print tmux.all_contents(t)
             self.assertEqual(output, lines)
