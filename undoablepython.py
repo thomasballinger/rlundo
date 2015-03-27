@@ -3,18 +3,36 @@ import os
 import socket
 import sys
 import logging
+from functools import partial
 
 # read about copy-on-write for Python processes - I feel like I've heard
 # this doesn't work well
 
+py2 = False
 if sys.version_info.major == 2:
     input = raw_input
+    ConnectionRefusedError = socket.error
+    py2 = True
 
 logger = logging.getLogger(__name__)
 
 DEBUG = False
 
 print('running with pid %r' % (os.getpid(),))
+
+
+def connect_and_wait_for_close(port):
+    s = socket.socket()
+    try:
+        s.connect(('localhost', port))
+    except ConnectionRefusedError:
+        pass
+    else:
+        assert b'' == s.recv(1024)
+
+
+save = partial(connect_and_wait_for_close, port=4242)
+restore = partial(connect_and_wait_for_close, port=4243)
 
 
 def log(msg):
@@ -31,11 +49,13 @@ def readline(prompt):
 
     log('pid %r initial call to readline' % (os.getpid()))
     while True:
+        save()
         try:
             s = input(prompt)
         except EOFError:
             readline.on_exit()
         if s == 'undo':
+            restore()
             readline.on_undo()
         read_fd, write_fd = os.pipe()
         pid = os.fork()

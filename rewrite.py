@@ -11,7 +11,7 @@ from findcursor import get_cursor_position
 # version 1: record sequences, guess how many lines to go back up
 terminal = blessings.Terminal()
 
-outputs = ['']
+outputs = [b'']
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='example.log', level=logging.DEBUG)
@@ -23,17 +23,17 @@ def write(data):
 
 
 def save():
-    outputs.append('')
+    outputs.append(b'')
     logger.debug('full output stack: %r' % (outputs, ))
 
 
 def count_lines(msg):
-    return msg.count('\n')
+    return msg.count(b'\n')
 
 
 def history(sequences):
-    full = ''.join(sequences)
-    return full.split('\n')
+    full = b''.join(sequences)
+    return full.split(b'\n')
 
 
 def restore():
