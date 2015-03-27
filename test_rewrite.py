@@ -232,7 +232,6 @@ class TestDiagramsWithTmux(unittest.TestCase):
             tmux.stepwise_resize_width(t, 11)
             self.assertEqual(tmux.all_contents(t), lines)
 
-    @unittest.skip
     def test_simple_resize(self):
         self.assert_undo('''
             before              after
