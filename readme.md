@@ -79,7 +79,8 @@ to restore previous terminal states
     - [ ] also use width to calculate
   - [x] figure out if wrapping works (I'm suspicious it doesn't,
         and we'll need calculate wrapping ourselves
-  - [ ] slow mode: does tmux test visible, with delay
+  - [x] slow mode: does tmux test visible, with delay
+  - [ ] display test failures with pretty diffs
 
 - Test cases:
   - [x] same screen, no line wrapping

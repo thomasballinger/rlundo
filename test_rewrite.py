@@ -30,11 +30,106 @@ def restore(t):
     time.sleep(.1)
 
 
+class DiagramsWithTmux(object):
+    maxDiff = 10000
+
+    def assert_undo(self, diagram, slow=False):
+        states = [terminal_dsl.parse_term_state(x)[1]
+                  for x in terminal_dsl.divide_term_states(diagram)]
+        with UndoScenario(states[0]) as t:
+            if slow: time.sleep(1)
+            UndoScenario.initialize(t, states[0], slow=slow)
+            for before, after in zip(states[:-1], states[1:]):
+                if slow: time.sleep(1)
+                self.resize(before, after, t)
+                if self.should_undo(before, after):
+                    restore(t)
+                self.assertEqual(tmux.all_contents(t), after.lines)
+
+    def resize(self, before, after, t):
+        tmux.stepwise_resize_width(t, after.width)
+        tmux.stepwise_resize_height(t, after.height)
+
+    def should_undo(self, s1, s2):
+        return len(s1.lines) > len(s2.lines)
+
+
+class TestDiagramsWithTmux(unittest.TestCase, DiagramsWithTmux):
+    def test_simple_undo(self):
+        self.assert_undo('''
+            before             after
+        +-----------+      +-----------+
+        |$rw        |      |$rw        |
+        |>1 + 1     |      |>1 + 1     |
+        |usually 2  |      |usually 2  |
+        +-----------+      +-----------+
+        |>2 + 2     |      |>2 + 2     |
+        |notquite 4 |      |notquite 4 |
+        |>3         |      |>@         |
+        |3          |      ~           ~
+        |>@         |      ~           ~
+        ~           ~      ~           ~
+        +-----------+      +-----------+
+        ''')
+
+    def test_resizing_window(self):
+        lines = [u'$rw',
+                 u'>1 + 1',
+                 u'usually 2',
+                 u'>2 + 2',
+                 u'notquite 4',
+                 u'>3',
+                 u'3',
+                 u'>']
+        termstate = terminal_dsl.TerminalState(
+            lines=lines, cursor_line=7, cursor_offset=1, width=11,
+            height=6, history_height=3)
+        with UndoScenario(termstate) as t:
+            UndoScenario.initialize(t, termstate)
+            tmux.stepwise_resize_width(t, 11)
+            self.assertEqual(tmux.all_contents(t), lines)
+
+    def test_simple_resize(self):
+        self.assert_undo('''
+            before              after
+        +-----------+      +--------------+
+        |$rw        |      |$rw           |
+        |>1 + 1     |      |>1 + 1        |
+        |usually 2  |      |usually 2     |
+        +-----------+      +--------------+
+        |>2 + 2     |      |>2 + 2        |
+        |notquite 4 |      |notquite 4    |
+        |>3         |      |>3            |
+        |3          |      |3             |
+        |>@         |      |>@            |
+        ~           ~      ~              ~
+        +-----------+      +--------------+
+        ''')
+
+    def test_multistep(self):
+        self.assert_undo('''
+           initial            widen             narrow        widen and undo
+        +-----------+    +--------------+    +----------+    +--------------+
+        |$rw        |    |$rw           |    |$rw       |    |$rw           |
+        |>1 + 1     |    |>1 + 1        |    |>1 + 1    |    |>1 + 1        |
+        |usually 2  |    |usually 2     |    |usually 2 |    |usually 2     |
+        +-----------+    +--------------+    +----------+    +--------------+
+        |>2 + 2     |    |>2 + 2        |    |>2 + 2    |    |>2 + 2        |
+        |notquite 4 |    |notquite 4    |    |notquite 4|    |notquite 4    |
+        |>3         |    |>3            |    |>3        |    |>@            |
+        |3          |    |3             |    |3         |    ~              ~
+        |>@         |    |>@            |    |>@        |    ~              ~
+        ~           ~    ~              ~    ~          ~    ~              ~
+        +-----------+    +--------------+    +----------+    +--------------+
+        ''')
+
+
 class TestRewriteHelpers(unittest.TestCase):
     def test_history(self):
-        self.assertEqual(rewrite.history(['>>> print("hello\\n"*3)\nhello\nhello\nhello\n',
-                                          '>>> 1 + 1\n2\n',
-                                          '>>> ']),
+        self.assertEqual(rewrite.history(
+                         ['>>> print("hello\\n"*3)\nhello\nhello\nhello\n',
+                          '>>> 1 + 1\n2\n',
+                          '>>> ']),
                          ['>>> print("hello\\n"*3)',
                           'hello',
                           'hello',
@@ -45,7 +140,6 @@ class TestRewriteHelpers(unittest.TestCase):
 
 
 class TestRunWithTmux(unittest.TestCase):
-
     def test_cursor_query(self):
         with tmux.TmuxPane(40, 10) as t:
             tmux.send_command(t, 'true 1234')
@@ -176,77 +270,20 @@ class TestRunWithTmux(unittest.TestCase):
             self.assertEqual(tmux.cursor_pos(t), (1, 1))
 
 
-class TestDiagramsWithTmux(unittest.TestCase):
-    maxDiff = 10000
-
-    def assert_undo(self, diagram):
-        states = [terminal_dsl.parse_term_state(x)[1]
-                  for x in terminal_dsl.divide_term_states(diagram)]
-        with UndoScenario(states[0]) as t:
-            UndoScenario.initialize(t, states[0])
-            for before, after in zip(states[:-1], states[1:]):
-                self.resize(before, after, t)
-                if self.should_undo(before, after):
-                    restore(t)
-                self.assertEqual(tmux.all_contents(t), after.lines)
-
-    def resize(self, before, after, t):
-        tmux.stepwise_resize_width(t, after.width)
-        tmux.stepwise_resize_height(t, after.height)
-
-    def should_undo(self, s1, s2):
-        return len(s1.lines) > len(s2.lines)
-
-    def test_simple_undo(self):
-        self.assert_undo('''
-            before             after
-        +-----------+      +-----------+
-        |$rw        |      |$rw        |
-        |>1 + 1     |      |>1 + 1     |
-        |usually 2  |      |usually 2  |
-        +-----------+      +-----------+
-        |>2 + 2     |      |>2 + 2     |
-        |notquite 4 |      |notquite 4 |
-        |>3         |      |>@         |
-        |3          |      ~           ~
-        |>@         |      ~           ~
-        ~           ~      ~           ~
-        +-----------+      +-----------+
-        ''')
-
-    def test_resizing_window(self):
-        lines = [u'$rw',
-                 u'>1 + 1',
-                 u'usually 2',
-                 u'>2 + 2',
-                 u'notquite 4',
-                 u'>3',
-                 u'3',
-                 u'>']
-        termstate = terminal_dsl.TerminalState(
-            lines=lines, cursor_line=7, cursor_offset=1, width=11,
-            height=6, history_height=3)
-        with UndoScenario(termstate) as t:
-            UndoScenario.initialize(t, termstate)
-            tmux.stepwise_resize_width(t, 11)
-            self.assertEqual(tmux.all_contents(t), lines)
-
-    def test_simple_resize(self):
-        self.assert_undo('''
-            before              after
-        +-----------+      +--------------+
-        |$rw        |      |$rw           |
-        |>1 + 1     |      |>1 + 1        |
-        |usually 2  |      |usually 2     |
-        +-----------+      +--------------+
-        |>2 + 2     |      |>2 + 2        |
-        |notquite 4 |      |notquite 4    |
-        |>3         |      |>3            |
-        |3          |      |3             |
-        |>@         |      |>@            |
-        ~           ~      ~              ~
-        +-----------+      +--------------+
-        ''')
+class TestWrappedLines(unittest.TestCase, DiagramsWithTmux):
+    def test_wrapped_lines(self):
+        self.assert_undo("""
+        +------+   +------+
+        +------+   +------+
+        |$rw   |   |$rw   |
+        |>1    |   |>1    |
+        |>stuff|   |>@    |
+        |abcdef+   ~      ~
+        |ghijk |   ~      ~
+        |>@    |   ~      ~
+        ~      ~   ~      ~
+        +------+   +------+
+        """)
 
 
 class UndoScenario(tmux.TmuxPane):
@@ -286,6 +323,8 @@ class UndoScenario(tmux.TmuxPane):
         """
         if not termstate.lines[0] == '$rw':
             raise ValueError("termstate doesn't start with a call to rw: %r" % (termstate.lines[0], ))
+        if not termstate.cursor_line == len(termstate.lines) - 1:
+            raise ValueError("cursor not on last line!")
 
     def check_port(self, port):
         s = socket.socket()
@@ -312,7 +351,7 @@ class UndoScenario(tmux.TmuxPane):
         return tmux.TmuxPane.__enter__(self)
 
     @classmethod
-    def initialize(cls, pane, termstate):
+    def initialize(cls, pane, termstate, slow=False):
 
         lines = termstate.lines[:]
         assert lines.pop(0) == '$rw'
@@ -324,6 +363,8 @@ class UndoScenario(tmux.TmuxPane):
         pane.enter()
         tmux.wait_until_cursor_moves(pane, 1, 1)
         for i, line in enumerate(lines):
+            if slow:
+                time.sleep(1)
             if i == termstate.cursor_line:
                 assert len(lines) == i - 1
                 pane.tmux('send-keys', line)
