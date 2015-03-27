@@ -62,9 +62,11 @@ to restore previous terminal states
     [x] calculate logical lines of history from to rows
   - [x] put new prompt in middle row if there's enough history to fill out above it
   - [x] put new prompt higher up if not enough history
-- [ ] Fix prompts not appearing until keystroke
-- [ ] Fix cursor query responses appearing onscreen
+- [x] fix prompts not appearing until keystroke
+  - [ ] contribute this back to python_termcast_client
+- [ ] fix cursor query responses appearing onscreen
 - [x] fix pity to allow window resizing (it was a py2/3 problem)
+- [ ] fix requiring keystroke at program exit
 - [ ] refactor rewrite.py to use a class instead of globals
 - [ ] set up testing harness: use Tmux
   - [x] programmatically set up tmux

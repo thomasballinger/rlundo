@@ -5,7 +5,7 @@ import threading
 import logging
 
 import blessings
-from termcast_client import pity
+import pity
 from findcursor import get_cursor_position
 
 # version 1: record sequences, guess how many lines to go back up
