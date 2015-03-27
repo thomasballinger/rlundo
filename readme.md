@@ -63,6 +63,7 @@ to restore previous terminal states
   - [x] put new prompt in middle row if there's enough history to fill out above it
   - [x] put new prompt higher up if not enough history
 - [ ] fix pity to allow window resizing
+- [ ] refactor rewrite.py to use a class instead of globals
 - [ ] set up testing harness: use Tmux
   - [x] programmatically set up tmux
     - [x] programmatically set up terminal state from a diagram

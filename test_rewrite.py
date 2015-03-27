@@ -1,7 +1,11 @@
 from __future__ import unicode_literals
 
+import os
 import re
+import select
+import signal
 import socket
+import tempfile
 import textwrap
 import time
 import unittest
@@ -178,14 +182,14 @@ class TestDiagramsWithTmux(unittest.TestCase):
     def assert_undo(self, diagram):
         states = [terminal_dsl.parse_term_state(x)[1]
                   for x in terminal_dsl.divide_term_states(diagram)]
-
+        print states
         with UndoScenario(states[0]) as t:
             UndoScenario.initialize(t, states[0])
             for before, after in zip(states[:-1], states[1:]):
                 self.resize(before, after, t)
                 if self.should_undo(before, after):
                     restore(t)
-                self.assertEqual(tmux.all_contents(t), states[1].lines)
+                self.assertEqual(tmux.all_contents(t), after.lines)
 
     def resize(self, before, after, t):
         tmux.stepwise_resize_width(t, after.width)
@@ -211,6 +215,24 @@ class TestDiagramsWithTmux(unittest.TestCase):
         +-----------+      +-----------+
         ''')
 
+    def test_resizing_window(self):
+        lines = [u'$rw',
+                 u'>1 + 1',
+                 u'usually 2',
+                 u'>2 + 2',
+                 u'notquite 4',
+                 u'>3',
+                 u'3',
+                 u'>']
+        termstate = terminal_dsl.TerminalState(
+            lines=lines, cursor_line=7, cursor_offset=1, width=11,
+            height=6, history_height=3)
+        with UndoScenario(termstate) as t:
+            UndoScenario.initialize(t, termstate)
+            tmux.stepwise_resize_width(t, 11)
+            self.assertEqual(tmux.all_contents(t), lines)
+
+    @unittest.skip
     def test_simple_resize(self):
         self.assert_undo('''
             before              after
@@ -227,6 +249,7 @@ class TestDiagramsWithTmux(unittest.TestCase):
         ~           ~      ~              ~
         +-----------+      +--------------+
         ''')
+
 
 class UndoScenario(tmux.TmuxPane):
     def bash_config_contents(self):
@@ -264,7 +287,7 @@ class UndoScenario(tmux.TmuxPane):
         ValueError: termstate doesn't start with a call to rw
         """
         if not termstate.lines[0] == '$rw':
-            raise ValueError("termstate doesn't start with a call to rw")
+            raise ValueError("termstate doesn't start with a call to rw: %r" % (termstate.lines[0], ))
 
     def check_port(self, port):
         s = socket.socket()

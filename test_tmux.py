@@ -60,3 +60,5 @@ class TestTmux(unittest.TestCase):
             self.assertEqual(tmux.cursor_pos(t), (2, 1))
             self.assertEqual(tmux.visible_after_prompt(t),
                              [' 1234', '56789', '$'])
+            tmux.stepwise_resize_width(t, 20)
+            tmux.stepwise_resize_height(t, 20)
