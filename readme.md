@@ -118,6 +118,7 @@ to restore previous terminal states
     - [ ] web scraping
 - [ ] use ctrl key instead of typing 'undo'
 - [ ] figure out how to intercept Python readline
+- [ ] make ctrl-c work in undoablepython.py
 - [ ] solution for haskeline
 
 
