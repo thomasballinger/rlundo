@@ -37,13 +37,13 @@ class DiagramsWithTmux(object):
         states = [terminal_dsl.parse_term_state(x)[1]
                   for x in terminal_dsl.divide_term_states(diagram)]
         with UndoScenario(states[0]) as t:
+            UndoScenario.initialize(t, states[0])
             if slow: time.sleep(1)
-            UndoScenario.initialize(t, states[0], slow=slow)
             for before, after in zip(states[:-1], states[1:]):
-                if slow: time.sleep(1)
                 self.resize(before, after, t)
                 if self.should_undo(before, after):
                     restore(t)
+                if slow: time.sleep(1)
                 self.assertEqual(tmux.all_contents(t), after.lines)
 
     def resize(self, before, after, t):
@@ -137,6 +137,10 @@ class TestRewriteHelpers(unittest.TestCase):
                           '>>> 1 + 1',
                           '2',
                           '>>> '])
+
+    def test_count_lines(self):
+        self.assertEqual(rewrite.count_lines("1234\n123456", 4), 2)
+        self.assertEqual(rewrite.count_lines("1234\n123456", 10), 1)
 
 
 class TestRunWithTmux(unittest.TestCase):
@@ -283,7 +287,7 @@ class TestWrappedLines(unittest.TestCase, DiagramsWithTmux):
         |>@    |   ~      ~
         ~      ~   ~      ~
         +------+   +------+
-        """)
+        """, slow=True)
 
 
 class UndoScenario(tmux.TmuxPane):
@@ -351,7 +355,7 @@ class UndoScenario(tmux.TmuxPane):
         return tmux.TmuxPane.__enter__(self)
 
     @classmethod
-    def initialize(cls, pane, termstate, slow=False):
+    def initialize(cls, pane, termstate):
 
         lines = termstate.lines[:]
         assert lines.pop(0) == '$rw'
@@ -363,8 +367,6 @@ class UndoScenario(tmux.TmuxPane):
         pane.enter()
         tmux.wait_until_cursor_moves(pane, 1, 1)
         for i, line in enumerate(lines):
-            if slow:
-                time.sleep(1)
             if i == termstate.cursor_line:
                 assert len(lines) == i - 1
                 pane.tmux('send-keys', line)

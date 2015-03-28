@@ -27,8 +27,10 @@ def save():
     logger.debug('full output stack: %r' % (outputs, ))
 
 
-def count_lines(msg):
-    return msg.count(b'\n')
+def count_lines(msg, width):
+    """Number of lines msg would move cursor down"""
+    print msg, width
+    return sum([(len(line) - 1) // width + 1 for line in msg.split('\n')]) - 1
 
 
 def history(sequences):
@@ -41,7 +43,7 @@ def restore():
     lines_between_saves = outputs.pop() if outputs else ''
     lines_after_save = outputs.pop() if outputs else ''
     lines = lines_between_saves + lines_after_save
-    n = count_lines(lines)
+    n = count_lines(lines, terminal.width)
     lines_available, _ = get_cursor_position(sys.stdout, sys.stdin)
     logger.debug('lines move: %d lines_available: %d' % (n, lines_available))
     if n > lines_available:

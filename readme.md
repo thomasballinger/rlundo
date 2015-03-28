@@ -107,6 +107,7 @@ to restore previous terminal states
   - [ ] test case: screen resize
     - [ ] write test
     - [ ] test passing
+  - [ ] test case: non-1 character widths
 
 ##rlundoable
 
