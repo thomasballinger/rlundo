@@ -108,6 +108,6 @@ class ForkUndoConsole(code.InteractiveConsole):
         """
         return readline(prompt)
 
-
-console = ForkUndoConsole()
-console.interact()
+if __name__ == '__main__':
+    console = ForkUndoConsole()
+    console.interact()
