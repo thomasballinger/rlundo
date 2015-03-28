@@ -81,6 +81,7 @@ to restore previous terminal states
         and we'll need calculate wrapping ourselves
   - [x] slow mode: does tmux test visible, with delay
   - [ ] display test failures with pretty diffs
+- [ ] Python 3 compatibility
 
 - Test cases:
   - [x] same screen, no line wrapping
