@@ -1,10 +1,31 @@
 from __future__ import unicode_literals
 
 import unittest
-import time
 
 import tmux
-import terminal_dsl
+
+
+class TestTmuxPaneInfo(unittest.TestCase):
+    def test_contents(self):
+        with tmux.TmuxPane(20, 5) as t:
+            tmux.send_command(t, 'echo 01234567890123456789')
+            tmux.send_command(t, 'echo 01234567890123456789')
+            self.assertEqual(tmux.all_contents(t),
+                             ['$echo 01234567890123',
+                              '456789',
+                              '01234567890123456789',
+                              '$echo 01234567890123',
+                              '456789',
+                              '01234567890123456789',
+                              '$'])
+            self.assertEqual(tmux.all_lines(t),
+                             ['$echo 01234567890123'
+                              '456789',
+                              '01234567890123456789',
+                              '$echo 01234567890123'
+                              '456789',
+                              '01234567890123456789',
+                              '$'])
 
 
 class TestTmux(unittest.TestCase):

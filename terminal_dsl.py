@@ -98,6 +98,18 @@ class TerminalState(_TerminalStateBase):
         """Uses extra parameters to check derived properties"""
         pass
 
+    @classmethod
+    def from_tmux_pane(cls, pane):
+        import tmux
+        tmux.all_contents()
+        return TerminalState(
+            lines=['a-a-a-', 'b-b-b-', ''],
+            cursor_line=2,
+            cursor_offset=0,
+            width=6,
+            height=3,
+            history_height=0)
+
     @property
     def visible_rows(self):
         return split_lines(self.lines, self.width)[self.history_height:]
@@ -217,6 +229,7 @@ def parse_term_state(s):
         height=section_heights['visible'],
         history_height=section_heights['history'],
     )
+
 
 
 # should eventually test xterm, gnome-terminal, iterm, terminal.app, tmux

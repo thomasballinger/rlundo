@@ -12,6 +12,10 @@ def all_contents(pane):
     return pane.tmux('capture-pane', '-epS', '-10000').stdout
 
 
+def all_lines(pane):
+    return pane.tmux('capture-pane', '-epJS', '-10000').stdout
+
+
 def scrollback(pane):
     return pane.tmux('capture-pane', '-epS', '-10000', '-E', '-1').stdout
 
