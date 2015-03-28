@@ -44,6 +44,8 @@ def history(sequences):
     full = b''.join(sequences)
     return full.split(b'\n')
 
+HISTORY_BROKEN_MSG = '#<---History contiguity broken by rewind--->'
+
 
 def restore():
     logger.debug('full output stack: %r' % (outputs, ))
@@ -62,7 +64,8 @@ def restore():
         for _ in range(lines_available):
             write(terminal.move_up)
             write(terminal.clear_eol)
-        write('#<---History contiguity broken by rewind--->\n')
+        write(HISTORY_BROKEN_MSG[:-terminal.width])
+        write('\n')
         for _ in range(terminal.height - 2):
             write(terminal.move_down)
         for _ in range(200):

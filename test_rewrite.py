@@ -327,6 +327,29 @@ class TestWrappedLines(unittest.TestCase, DiagramsWithTmux):
         +----------+     +----------+
         """)
 
+    def test_undo_back_into_history(self):
+        self.assert_undo("""
+        +----------+     +----------+
+        |$rw       |     |$rw       |
+        |>10.to.11 |     |>10.to.11 |
+        |10        |     |10        |
+        |12        |     |12        |
+        |13        |     |13        |
+        |>1.to.1   |     |>1.to.1   |
+        |1         |     |1         |
+        |2         |     |2         |
+        |3         |     |3         |
+        +----------+     |#<---Histo|
+        |4         |     +----------+
+        |5         |     |12        |
+        |6         |     |13        |
+        |>@        |     |>@        |
+        ~          ~     ~          ~
+        +----------+     ~          ~
+                         +----------+
+        """)
+
+
 
 class UndoScenario(tmux.TmuxPane):
     """
