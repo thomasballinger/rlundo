@@ -161,7 +161,10 @@ class TmuxPane(object):
         self.bash_config = self.tempfile(self.bash_config_contents())
 
         self.server = tmuxp.Server()
-        self.session = self.server.sessions[0]
+        try:
+            self.session = self.server.sessions[0]
+        except tmuxp.exc.TmuxpException:
+            self.session = self.server.new_session()
         self.server.tmux('set', 'automatic-rename', 'on')
         self.server.tmux('set', '-u', 'automatic-rename-format')
 
