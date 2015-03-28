@@ -67,6 +67,8 @@ to restore previous terminal states
 - [ ] fix cursor query responses appearing onscreen
 - [x] fix pity to allow window resizing (it was a py2/3 problem)
 - [ ] fix requiring keystroke at program exit
+  - it seems to be something racy - removing logging statements in
+    pity makes it happen more!
 - [ ] refactor rewrite.py to use a class instead of globals
 - [ ] set up testing harness: use Tmux
   - [x] programmatically set up tmux

@@ -116,7 +116,7 @@ def wait_until_cursor_moves(pane, row, col, interval=.02, max=1):
     t0 = time.time()
     while True:
         if time.time() > t0 + max:
-            raise ValueError("cursor row didn't move from initial within max time:")
+            raise ValueError("cursor row didn't move from initial within max time: %r" % visible(pane))
         if (row, col) != cursor_pos(pane):
             return
         time.sleep(interval)

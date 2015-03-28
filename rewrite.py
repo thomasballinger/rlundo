@@ -29,7 +29,8 @@ def save():
 
 def count_lines(msg, width):
     """Number of lines msg would move cursor down"""
-    return sum([(((len(line) - 1) // width) + 1) for line in msg.split('\n')]) - 1
+    return sum([max(0, (len(line) - 1) // width) + 1
+                for line in msg.split('\n')]) - 1
 
 
 def linesplit(lines, width):
@@ -49,7 +50,9 @@ def restore():
     lines_between_saves = outputs.pop() if outputs else ''
     lines_after_save = outputs.pop() if outputs else ''
     lines = lines_between_saves + lines_after_save
+    logger.debug('lines to rewind: %r' % (lines, ))
     n = count_lines(lines, terminal.width)
+    logger.debug('numer of lines to rewind %d' % (n, ))
     lines_available, _ = get_cursor_position(sys.stdout, sys.stdin)
     logger.debug('lines move: %d lines_available: %d' % (n, lines_available))
     if n > lines_available:

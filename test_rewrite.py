@@ -144,6 +144,7 @@ class TestRewriteHelpers(unittest.TestCase):
     def test_count_lines(self):
         self.assertEqual(rewrite.count_lines("1234\n123456", 4), 2)
         self.assertEqual(rewrite.count_lines("1234\n123456", 10), 1)
+        self.assertEqual(rewrite.count_lines("> undo\r\n> 1\r\n1\r\n", 10), 3)
 
     def test_linesplit(self):
         self.assertEqual(rewrite.linesplit(["1234", "123456"], 4),
@@ -314,8 +315,24 @@ class TestWrappedLines(unittest.TestCase, DiagramsWithTmux):
         +------+  +-----------+  +------+
         """)
 
+    def test_irb_style_undo(self):
+        self.assert_undo("""
+        +----------+     +----------+
+        +----------+     +----------+
+        |$rw       |     |$rw       |
+        |>1 + 1    |     |>@        |
+        |2         |     ~          ~
+        |>undo     |     ~          ~
+        |@         |     ~          ~
+        +----------+     +----------+
+        """)
+
 
 class UndoScenario(tmux.TmuxPane):
+    """
+    A series of prompts, inputs, and associated outputs.
+    Final line must have a cursor on it.
+    """
     def bash_config_contents(self):
         return """
         export PS1='$'
@@ -401,14 +418,16 @@ class UndoScenario(tmux.TmuxPane):
                 pane.tmux('send-keys', line[1:])
                 pane.enter()
             else:
-                row, col = tmux.cursor_pos(pane)
-                pane.tmux('send-keys', line)
-                tmux.wait_until_cursor_moves(pane, row, col)
-                pane.enter()
+                if line != '':
+                    row, col = tmux.cursor_pos(pane)
+                    pane.tmux('send-keys', line)
+                    tmux.wait_until_cursor_moves(pane, row, col)
+                if i != len(lines) - 1:
+                    pane.enter()
 
 
 class TestUndoScenario(unittest.TestCase):
-    def test_initial(self):
+    def test_initialize(self):
         lines = ['$rw', '>a', 'b', 'c', '>d', 'e', '>']
         termstate = terminal_dsl.TerminalState(
             lines, cursor_line=6, cursor_offset=1,

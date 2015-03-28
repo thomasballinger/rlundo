@@ -57,7 +57,7 @@ def divide_term_states(s):
         sections.append(vertical_strip)
         last = index
     candidates = ['\n'.join(section) for section in sections]
-    diagrams = [x for x in candidates if '|' in x and '-' in x and '@' in x]
+    diagrams = [x for x in candidates if '|' in x and '-' in x and '+' in x]
     return diagrams
 
 _TerminalStateBase = namedtuple('TerminalState', [
