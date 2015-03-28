@@ -36,6 +36,8 @@ class DiagramsWithTmux(object):
     def assert_undo(self, diagram, slow=False):
         states = [terminal_dsl.parse_term_state(x)[1]
                   for x in terminal_dsl.divide_term_states(diagram)]
+        if len(states) < 2:
+            raise ValueError("Diagram has only one state")
         with UndoScenario(states[0]) as t:
             UndoScenario.initialize(t, states[0])
             if slow: time.sleep(1)
@@ -44,7 +46,8 @@ class DiagramsWithTmux(object):
                 if self.should_undo(before, after):
                     restore(t)
                 if slow: time.sleep(1)
-                self.assertEqual(tmux.all_contents(t), after.lines)
+                self.assertEqual(tmux.all_contents(t),
+                                 rewrite.linesplit(after.lines, after.width))
 
     def resize(self, before, after, t):
         tmux.stepwise_resize_width(t, after.width)
@@ -141,6 +144,12 @@ class TestRewriteHelpers(unittest.TestCase):
     def test_count_lines(self):
         self.assertEqual(rewrite.count_lines("1234\n123456", 4), 2)
         self.assertEqual(rewrite.count_lines("1234\n123456", 10), 1)
+
+    def test_linesplit(self):
+        self.assertEqual(rewrite.linesplit(["1234", "123456"], 4),
+                         ["1234", "1234", "56"])
+        self.assertEqual(rewrite.linesplit(["1234", "123456"], 10),
+                         ["1234", "123456"])
 
 
 class TestRunWithTmux(unittest.TestCase):
@@ -275,7 +284,9 @@ class TestRunWithTmux(unittest.TestCase):
 
 
 class TestWrappedLines(unittest.TestCase, DiagramsWithTmux):
-    def test_wrapped_lines(self):
+    maxDiff = 10000
+
+    def test_wrapped_undo(self):
         self.assert_undo("""
         +------+   +------+
         +------+   +------+
@@ -287,7 +298,21 @@ class TestWrappedLines(unittest.TestCase, DiagramsWithTmux):
         |>@    |   ~      ~
         ~      ~   ~      ~
         +------+   +------+
-        """, slow=True)
+        """)
+
+    def test_wrapped_undo_after_narrow(self):
+        self.assert_undo("""
+        +------+  +-----------+  +------+
+        +------+  +-----------+  +------+
+        |$rw   |  |$rw        |  |$rw   |
+        |>1    |  |>1         |  |>1    |
+        |>stuff|  |>stuff     |  |>@    |
+        |abcdef+  |abcdefghijk+  ~      ~
+        |ghijkl+  |lmnopq     |  ~      ~
+        |mnopq |  |>@         |  ~      ~
+        |>@    ~  ~           ~  ~      ~
+        +------+  +-----------+  +------+
+        """)
 
 
 class UndoScenario(tmux.TmuxPane):
@@ -323,7 +348,7 @@ class UndoScenario(tmux.TmuxPane):
         >>> UndoScenario.validate_termstate(termstate)
         Traceback (most recent call last):
             ...
-        ValueError: termstate doesn't start with a call to rw
+        ValueError: termstate doesn't start with a call to rw: u'>a'
         """
         if not termstate.lines[0] == '$rw':
             raise ValueError("termstate doesn't start with a call to rw: %r" % (termstate.lines[0], ))
@@ -342,7 +367,7 @@ class UndoScenario(tmux.TmuxPane):
         undo schenarios always start by calling python rewrite.py
 
         >>> termstate = terminal_dsl.TerminalState(
-        ...     ['$rw', '>a', 'b', 'c', '>d', 'e', '>'], cursor_line=5,
+        ...     ['$rw', '>a', 'b', 'c', '>d', 'e', '>'], cursor_line=6,
         ...     cursor_offset=1, width=10, height=10, history_height=0)
         >>> with UndoScenario(termstate) as t:
         ...     UndoScenario.initialize(t, termstate)
@@ -380,8 +405,6 @@ class UndoScenario(tmux.TmuxPane):
                 pane.tmux('send-keys', line)
                 tmux.wait_until_cursor_moves(pane, row, col)
                 pane.enter()
-
-        return pane
 
 
 class TestUndoScenario(unittest.TestCase):

@@ -29,8 +29,14 @@ def save():
 
 def count_lines(msg, width):
     """Number of lines msg would move cursor down"""
-    print msg, width
-    return sum([(len(line) - 1) // width + 1 for line in msg.split('\n')]) - 1
+    return sum([(((len(line) - 1) // width) + 1) for line in msg.split('\n')]) - 1
+
+
+def linesplit(lines, width):
+    rows = []
+    for line in lines:
+        rows.extend(line[i:i+width] for i in range(0, len(line), width))
+    return rows
 
 
 def history(sequences):
