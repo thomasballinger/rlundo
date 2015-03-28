@@ -86,9 +86,9 @@ to restore previous terminal states
   - [x] same screen, no line wrapping
     - [x] write test
     - [x] test passing
-  - [ ] test case: same screen, line wrapping
-    - [ ] write test
-    - [ ] test passing
+  - [x] test case: same screen, line wrapping
+    - [x] write test
+    - [x] test passing
   - [x] test case: scroll down, no line wrapping
     - [x] write test
     - [x] test passing
