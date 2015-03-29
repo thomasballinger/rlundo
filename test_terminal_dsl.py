@@ -1,4 +1,4 @@
-from terminal_dsl import TerminalState, parse_term_state
+from terminal_dsl import TerminalState, parse_term_state, horzcat
 import unittest
 
 
@@ -45,3 +45,9 @@ class TestTerminalDiagramParsing(unittest.TestCase):
         +------+"""
         self.assertRaises(ValueError, parse_term_state, s)
 
+
+class TestHelpers(unittest.TestCase):
+    def test_horzcat(self):
+        self.assertEqual(horzcat('a\nbc\ndef\ng',
+                                 'z\nx\nywvut'),
+                         'a  z\nbc x\ndefywvut\ng  ')

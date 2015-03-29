@@ -17,7 +17,8 @@ def all_lines(pane):
 
 
 def scrollback(pane):
-    return pane.tmux('capture-pane', '-epS', '-10000', '-E', '-1').stdout
+    all = all_contents(pane)
+    return all[:len(all)-len(visible(pane))]
 
 
 def visible(pane):

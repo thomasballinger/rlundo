@@ -1,11 +1,7 @@
 from __future__ import unicode_literals
 
-import os
 import re
-import select
-import signal
 import socket
-import tempfile
 import textwrap
 import time
 import unittest
@@ -43,9 +39,12 @@ class DiagramsWithTmux(object):
             if slow: time.sleep(1)
             for before, after in zip(states[:-1], states[1:]):
                 self.resize(before, after, t)
+                if slow: time.sleep(1)
                 if self.should_undo(before, after):
                     restore(t)
-                if slow: time.sleep(1)
+                    if slow: time.sleep(1)
+                actual = terminal_dsl.TerminalState.from_tmux_pane(t)
+                self.assertEqual(after, actual, after.visible_diff(actual))
                 self.assertEqual(tmux.all_contents(t),
                                  rewrite.linesplit(after.lines, after.width))
 
@@ -303,17 +302,18 @@ class TestWrappedLines(unittest.TestCase, DiagramsWithTmux):
 
     def test_wrapped_undo_after_narrow(self):
         self.assert_undo("""
-        +------+  +-----------+  +------+
-        +------+  +-----------+  +------+
-        |$rw   |  |$rw        |  |$rw   |
-        |>1    |  |>1         |  |>1    |
-        |>stuff|  |>stuff     |  |>@    |
-        |abcdef+  |abcdefghijk+  ~      ~
-        |ghijkl+  |lmnopq     |  ~      ~
-        |mnopq |  |>@         |  ~      ~
-        |>@    ~  ~           ~  ~      ~
-        +------+  +-----------+  +------+
-        """)
+                                 +------+  +------+
+        +------+  +-----------+  |$rw   |  |$rw   |
+        +------+  +-----------+  +------+  +------+
+        |$rw   |  |$rw        |  |>1    |  |>1    |
+        |>1    |  |>1         |  |>stuff|  |>@    |
+        |>stuff|  |>stuff     |  |abcdef|  ~      ~
+        |abcdef+  |abcdefghijk+  |ghijkl|  ~      ~
+        |ghijkl+  |lmnopq     |  |mnopq |  ~      ~
+        |mnopq |  |>@         |  |>@    |  ~      ~
+        |>@    ~  ~           ~  ~      ~  ~      ~
+        +------+  +-----------+  +------+  +------+
+        """, slow=True)
 
     def test_irb_style_undo(self):
         self.assert_undo("""
@@ -348,7 +348,6 @@ class TestWrappedLines(unittest.TestCase, DiagramsWithTmux):
         +----------+     ~          ~
                          +----------+
         """)
-
 
 
 class UndoScenario(tmux.TmuxPane):
@@ -459,3 +458,26 @@ class TestUndoScenario(unittest.TestCase):
             UndoScenario.initialize(t, termstate)
             output = tmux.visible(t)
             self.assertEqual(output, lines)
+
+    def assertRoundtrip(self, diagram):
+        (before, ) = [terminal_dsl.parse_term_state(x)[1]
+                      for x in terminal_dsl.divide_term_states(diagram)]
+        with UndoScenario(before) as t:
+            UndoScenario.initialize(t, before)
+            after = terminal_dsl.TerminalState.from_tmux_pane(t)
+
+        self.assertEqual(before, after, before.visible_diff(after))
+
+    def test_wrapped(self):
+        self.assertRoundtrip("""
+        +------+
+        |$rw   |
+        +------+
+        |>1    |
+        |>stuff|
+        |abcdef|
+        |ghijkl|
+        |mnopq |
+        |>@    |
+        +------+
+        """)

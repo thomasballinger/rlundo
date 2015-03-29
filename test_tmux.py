@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import unittest
 
 import tmux
+import terminal_dsl
 
 
 class TestTmuxPaneInfo(unittest.TestCase):
@@ -28,6 +29,35 @@ class TestTmuxPaneInfo(unittest.TestCase):
                               '$'])
 
 
+class TestTerminalDSL(unittest.TestCase):
+    def test_simple(self):
+        with tmux.TmuxPane(10, 10) as t:
+            tmux.send_command(t, 'true 1')
+            self.assertEqual(tmux.visible(t), ['$true 1',
+                                               '$'])
+            tmux.send_command(t, 'true 2')
+            termstate = terminal_dsl.TerminalState.from_tmux_pane(t)
+            expected = terminal_dsl.TerminalState(
+                lines=['$true 1', '$true 2', '$'],
+                cursor_line=2, cursor_offset=1, width=10, height=10,
+                history_height=0)
+        self.assertEqual(expected, termstate, expected.visible_diff(termstate))
+
+    def test_wrapped_lines(self):
+        with tmux.TmuxPane(10, 10) as t:
+            tmux.send_command(t, 'true 12345')
+            self.assertEqual(tmux.visible(t), ['$true 1234',
+                                               '5',
+                                               '$'])
+            tmux.send_command(t, 'true 1234')
+            termstate = terminal_dsl.TerminalState.from_tmux_pane(t)
+            expected = terminal_dsl.TerminalState(
+                lines=['$true 12345', '$true 1234', '$'],
+                cursor_line=2, cursor_offset=1, width=10, height=10,
+                history_height=0)
+        self.assertEqual(expected, termstate, expected.visible_diff(termstate))
+
+
 class TestTmux(unittest.TestCase):
     def test_send_command(self):
         with tmux.TmuxPane(20, 20) as t:
@@ -41,10 +71,12 @@ class TestTmux(unittest.TestCase):
             t.send_keys('true 1')
             self.assertEqual(tmux.visible(t), ['$ true 1',
                                                '$'])
+            self.assertEqual(tmux.scrollback(t), [])
             t.send_keys('true 2')
             self.assertEqual(tmux.visible(t), ['$ true 1',
                                                '$ true 2',
                                                '$'])
+            self.assertEqual(tmux.scrollback(t), [])
 
     def test_lines_wrap(self):
         """lines and cursor position wrap
