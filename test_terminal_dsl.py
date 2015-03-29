@@ -19,6 +19,24 @@ class TestTerminalDiagramParsing(unittest.TestCase):
             height=3,
             history_height=0)))
 
+    def test_parse_term_state_with_empty_lines(self):
+        s = """
+        +------+
+        +------+
+        |a-a-a-|
+        |b-b-b-|
+        |@     |
+        ~      ~
+        ~      ~
+        +------+"""
+        self.assertEqual(parse_term_state(s), ('', TerminalState(
+            lines=['a-a-a-', 'b-b-b-', ''],
+            cursor_line=2,
+            cursor_offset=0,
+            width=6,
+            height=5,
+            history_height=0)))
+
     def test_parse_term_state_input_rejection(self):
         s = """
         +------+

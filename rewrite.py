@@ -64,7 +64,7 @@ def restore():
         for _ in range(lines_available):
             write(terminal.move_up)
             write(terminal.clear_eol)
-        write(HISTORY_BROKEN_MSG[:-terminal.width])
+        write(HISTORY_BROKEN_MSG[:terminal.width])
         write('\n')
         for _ in range(terminal.height - 2):
             write(terminal.move_down)
@@ -76,7 +76,7 @@ def restore():
         middle = terminal.height // 2
 
         for line in history(''.join(outputs))[-middle:]:
-            write('>hi there!\n\r')
+            write(line+'\n\r')
 
     else:
         logger.debug('moving cursor %d lines up for %r' % (n, lines))

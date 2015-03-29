@@ -53,7 +53,8 @@ class DiagramsWithTmux(object):
         tmux.stepwise_resize_height(t, after.height)
 
     def should_undo(self, s1, s2):
-        return len(s1.lines) > len(s2.lines)
+        return (len(s1.lines) > len(s2.lines) or
+                s1.lines.count('>undo') > s2.lines.count('>undo'))
 
 
 class TestDiagramsWithTmux(unittest.TestCase, DiagramsWithTmux):
@@ -307,13 +308,13 @@ class TestWrappedLines(unittest.TestCase, DiagramsWithTmux):
         +------+  +-----------+  +------+  +------+
         |$rw   |  |$rw        |  |>1    |  |>1    |
         |>1    |  |>1         |  |>stuff|  |>@    |
-        |>stuff|  |>stuff     |  |abcdef|  ~      ~
-        |abcdef+  |abcdefghijk+  |ghijkl|  ~      ~
+        |>stuff|  |>stuff     |  |abcdef+  ~      ~
+        |abcdef+  |abcdefghijk+  |ghijkl+  ~      ~
         |ghijkl+  |lmnopq     |  |mnopq |  ~      ~
         |mnopq |  |>@         |  |>@    |  ~      ~
         |>@    ~  ~           ~  ~      ~  ~      ~
         +------+  +-----------+  +------+  +------+
-        """, slow=True)
+        """)
 
     def test_irb_style_undo(self):
         self.assert_undo("""
@@ -329,24 +330,24 @@ class TestWrappedLines(unittest.TestCase, DiagramsWithTmux):
 
     def test_undo_back_into_history(self):
         self.assert_undo("""
-        +----------+     +----------+
-        |$rw       |     |$rw       |
-        |>10.to.11 |     |>10.to.11 |
-        |10        |     |10        |
-        |12        |     |12        |
-        |13        |     |13        |
-        |>1.to.1   |     |>1.to.1   |
-        |1         |     |1         |
-        |2         |     |2         |
-        |3         |     |3         |
-        +----------+     |#<---Histo|
-        |4         |     +----------+
-        |5         |     |12        |
-        |6         |     |13        |
-        |>@        |     |>@        |
-        ~          ~     ~          ~
-        +----------+     ~          ~
                          +----------+
+        +----------+     |$rw       |
+        |$rw       |     |>10.to.11 |
+        |>10.to.11 |     |10        |
+        |10        |     |12        |
+        |12        |     |13        |
+        |13        |     |>1.to.1   |
+        |>1.to.1   |     |1         |
+        |1         |     |2         |
+        |2         |     |3         |
+        |3         |     |#<---Histo|
+        +----------+     +----------+
+        |4         |     |12        |
+        |5         |     |13        |
+        |6         |     |>@        |
+        |>undo     |     ~          ~
+        |@         ~     ~          ~
+        +----------+     +----------+
         """)
 
 
@@ -363,9 +364,39 @@ class UndoScenario(tmux.TmuxPane):
 
     def python_script_contents(self):
         return textwrap.dedent("""\
+        import sys
+        move_up = u'\x1bM'
+        move_right = u'\x1b[C''
+        moe_left = u'\b'
+        clear_eol = u'\x1b[K'
+        clear_eos = u'\x1b[J'
+
+        def make_blank_line_below():
+            "Move cursor back to prev spot after hitting return"
+            sys.stdout.write(move_up)
+            sys.stdout.write(move_right)
+            sys.stdout.write(clear_eos)
+            sys.stdout.flush()
+
+        def move_cursor_back_up():
+            sys.stdout.write(move_left)
+            sys.stdout.write(move_up)
+            sys.stdout.write(clear_eos)
+            sys.stdout.write(move_up)
+            sys.stdout.write(move_right)
+
+        def move_cursor_over_to(n):
+
         raw_input(">")
         while True:
-            raw_input()
+            inp = raw_input()
+            if inp == 'up':
+                make_blank_line_below()
+            elif inp == 'up2':
+                move_cursor_back_up()
+            elif inp.startswith('ct'):
+                move_cursor_over(int(inp[2:]))
+
         """)
 
     def __init__(self, termstate):
@@ -438,7 +469,8 @@ class UndoScenario(tmux.TmuxPane):
                 tmux.send_command(pane, '>', enter=False, prompt=u'>')
                 save()
                 pane.tmux('send-keys', line[1:])
-                pane.enter()
+                if i != len(lines) - 1:
+                    pane.enter()
             else:
                 if line != '':
                     row, col = tmux.cursor_pos(pane)
@@ -446,6 +478,13 @@ class UndoScenario(tmux.TmuxPane):
                     tmux.wait_until_cursor_moves(pane, row, col)
                 if i != len(lines) - 1:
                     pane.enter()
+        row, col = tmux.cursor_pos
+        assert col in [0, 1]
+        for _ in range(row, termstate.height - 1):
+            pane.enter()
+        for _ in range(row, termstate.height - 1):
+            pane.tmux('send-keys', 
+
 
 
 class TestUndoScenario(unittest.TestCase):
@@ -475,9 +514,23 @@ class TestUndoScenario(unittest.TestCase):
         +------+
         |>1    |
         |>stuff|
-        |abcdef|
-        |ghijkl|
+        |abcdef+
+        |ghijkl+
         |mnopq |
         |>@    |
+        +------+
+        """)
+
+    def test_blank_lines(self):
+        self.assertRoundtrip("""
+        +------+
+        |$rw   |
+        +------+
+        |>1    |
+        |>x    |
+        |abcde |
+        |>@    |
+        ~      ~
+        ~      ~
         +------+
         """)

@@ -114,7 +114,6 @@ class TerminalState(_TerminalStateBase):
         print 'tmux.visible:', tmux.visible(pane)
         print 'history_height:', history_height
         print 'tmux.scrollback:', tmux.scrollback(pane)
-        import time; time.sleep(5)
         width, height = tmux.width(pane), tmux.height(pane)
 
         cursor_row, cursor_col = tmux.cursor_pos(pane)
@@ -142,12 +141,9 @@ class TerminalState(_TerminalStateBase):
                 error = ('Terminal states have different number of lines:'
                          '%d and %d' % (len(self.lines), len(other.lines)))
             elif self.lines != other.lines:
-                for i, (a, b) in enumerate(zip(self.lines)):
+                for i, (a, b) in enumerate(zip(self.lines, other.lines)):
                     if a != b:
                         error = "line %d is the first line to differ:" % (i, )
-                        display_lines = display.split('\n')
-                        display_lines[i] += ' (!)'
-                        display = '\n'.join(display_lines)
                         break
             else:
                 error = "Terminal states differ somehow:"
