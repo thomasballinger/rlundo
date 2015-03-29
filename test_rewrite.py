@@ -1,11 +1,7 @@
 from __future__ import unicode_literals
 
-import os
 import re
-import select
-import signal
 import socket
-import tempfile
 import textwrap
 import time
 import unittest
@@ -43,9 +39,12 @@ class DiagramsWithTmux(object):
             if slow: time.sleep(1)
             for before, after in zip(states[:-1], states[1:]):
                 self.resize(before, after, t)
+                if slow: time.sleep(1)
                 if self.should_undo(before, after):
                     restore(t)
-                if slow: time.sleep(1)
+                    if slow: time.sleep(1)
+                actual = terminal_dsl.TerminalState.from_tmux_pane(t)
+                self.assertEqual(after, actual, after.visible_diff(actual))
                 self.assertEqual(tmux.all_contents(t),
                                  rewrite.linesplit(after.lines, after.width))
 
@@ -54,7 +53,8 @@ class DiagramsWithTmux(object):
         tmux.stepwise_resize_height(t, after.height)
 
     def should_undo(self, s1, s2):
-        return len(s1.lines) > len(s2.lines)
+        return (len(s1.lines) > len(s2.lines) or
+                s1.lines.count('>undo') > s2.lines.count('>undo'))
 
 
 class TestDiagramsWithTmux(unittest.TestCase, DiagramsWithTmux):
@@ -303,16 +303,17 @@ class TestWrappedLines(unittest.TestCase, DiagramsWithTmux):
 
     def test_wrapped_undo_after_narrow(self):
         self.assert_undo("""
-        +------+  +-----------+  +------+
-        +------+  +-----------+  +------+
-        |$rw   |  |$rw        |  |$rw   |
-        |>1    |  |>1         |  |>1    |
-        |>stuff|  |>stuff     |  |>@    |
-        |abcdef+  |abcdefghijk+  ~      ~
-        |ghijkl+  |lmnopq     |  ~      ~
-        |mnopq |  |>@         |  ~      ~
-        |>@    ~  ~           ~  ~      ~
-        +------+  +-----------+  +------+
+                                 +------+  +------+
+        +------+  +-----------+  |$rw   |  |$rw   |
+        +------+  +-----------+  +------+  +------+
+        |$rw   |  |$rw        |  |>1    |  |>1    |
+        |>1    |  |>1         |  |>stuff|  |>@    |
+        |>stuff|  |>stuff     |  |abcdef+  ~      ~
+        |abcdef+  |abcdefghijk+  |ghijkl+  ~      ~
+        |ghijkl+  |lmnopq     |  |mnopq |  ~      ~
+        |mnopq |  |>@         |  |>@    |  ~      ~
+        |>@    ~  ~           ~  ~      ~  ~      ~
+        +------+  +-----------+  +------+  +------+
         """)
 
     def test_irb_style_undo(self):
@@ -329,26 +330,25 @@ class TestWrappedLines(unittest.TestCase, DiagramsWithTmux):
 
     def test_undo_back_into_history(self):
         self.assert_undo("""
-        +----------+     +----------+
-        |$rw       |     |$rw       |
-        |>10.to.11 |     |>10.to.11 |
-        |10        |     |10        |
-        |12        |     |12        |
-        |13        |     |13        |
-        |>1.to.1   |     |>1.to.1   |
-        |1         |     |1         |
-        |2         |     |2         |
-        |3         |     |3         |
-        +----------+     |#<---Histo|
-        |4         |     +----------+
-        |5         |     |12        |
-        |6         |     |13        |
-        |>@        |     |>@        |
-        ~          ~     ~          ~
-        +----------+     ~          ~
                          +----------+
+        +----------+     |$rw       |
+        |$rw       |     |>10.to.11 |
+        |>10.to.11 |     |10        |
+        |10        |     |12        |
+        |12        |     |13        |
+        |13        |     |>1.to.1   |
+        |>1.to.1   |     |1         |
+        |1         |     |2         |
+        |2         |     |3         |
+        |3         |     |#<---Histo|
+        +----------+     +----------+
+        |4         |     |12        |
+        |5         |     |13        |
+        |6         |     |>@        |
+        |>undo     |     ~          ~
+        |@         ~     ~          ~
+        +----------+     +----------+
         """)
-
 
 
 class UndoScenario(tmux.TmuxPane):
@@ -363,10 +363,55 @@ class UndoScenario(tmux.TmuxPane):
         """ % (self.python_script.name, )
 
     def python_script_contents(self):
+        # TODO: Move this out to its own file, import command aliases
         return textwrap.dedent("""\
-        raw_input(">")
+        import sys
+        move_up = u'\x1bM'
+        move_right = u'\x1b[C'
+        move_left = u'\b'
+        clear_eol = u'\x1b[K'
+        clear_eos = u'\x1b[J'
+
+        def make_blank_line_below(n):
+            "Move cursor back to prev spot after hitting return"
+            sys.stdout.write(move_up)
+            for _ in range(20):
+                sys.stdout.write(move_left)
+            for _ in range(n):
+                sys.stdout.write(move_right)
+            sys.stdout.write(clear_eos)
+            sys.stdout.flush()
+
+        def move_cursor_back_up():
+            sys.stdout.write(move_up)
+            sys.stdout.write(move_up)
+            sys.stdout.flush()
+
+        def move_cursor_up_and_over_and_clear(n):
+            sys.stdout.write(move_up)
+            sys.stdout.write(move_up)
+            for _ in range(20):
+                sys.stdout.write(move_left)
+            for _ in range(n):
+                sys.stdout.write(move_right)
+            sys.stdout.write(clear_eos)
+            sys.stdout.flush()
+
+        def dispatch(prompt=None):
+            if prompt:
+                inp = raw_input(prompt)
+            else:
+                inp = raw_input()
+            if inp.startswith('1c'):
+                make_blank_line_below(int(inp[2:]))
+            elif inp == 'up2':
+                move_cursor_back_up()
+            elif inp.startswith('uc'):
+                move_cursor_up_and_over_and_clear(int(inp[2:]))
+
+        dispatch(">")
         while True:
-            raw_input()
+            dispatch()
         """)
 
     def __init__(self, termstate):
@@ -439,7 +484,8 @@ class UndoScenario(tmux.TmuxPane):
                 tmux.send_command(pane, '>', enter=False, prompt=u'>')
                 save()
                 pane.tmux('send-keys', line[1:])
-                pane.enter()
+                if i != len(lines) - 1:
+                    pane.enter()
             else:
                 if line != '':
                     row, col = tmux.cursor_pos(pane)
@@ -447,6 +493,24 @@ class UndoScenario(tmux.TmuxPane):
                     tmux.wait_until_cursor_moves(pane, row, col)
                 if i != len(lines) - 1:
                     pane.enter()
+        row, col = tmux.cursor_pos(pane)
+
+        additional_required_blank_rows = (
+            termstate.history_height - len(tmux.scrollback(pane)) +
+            termstate.height - row - 1)
+        assert additional_required_blank_rows >= 0
+        assert col == len(line) % termstate.width  # TODO allow other columns
+        if additional_required_blank_rows == 1:
+            pane.tmux('1c'+str(col))
+            pane.enter()
+        elif additional_required_blank_rows > 1:
+            for _ in range(additional_required_blank_rows - 1):
+                pane.enter()
+            for _ in range(additional_required_blank_rows - 2):
+                pane.tmux('send-keys', 'up2')
+                pane.enter()
+            pane.tmux('send-keys', 'uc'+str(col))
+            pane.enter()
 
 
 class TestUndoScenario(unittest.TestCase):
@@ -459,3 +523,40 @@ class TestUndoScenario(unittest.TestCase):
             UndoScenario.initialize(t, termstate)
             output = tmux.visible(t)
             self.assertEqual(output, lines)
+
+    def assertRoundtrip(self, diagram):
+        (before, ) = [terminal_dsl.parse_term_state(x)[1]
+                      for x in terminal_dsl.divide_term_states(diagram)]
+        with UndoScenario(before) as t:
+            UndoScenario.initialize(t, before)
+            after = terminal_dsl.TerminalState.from_tmux_pane(t)
+
+        self.assertEqual(before, after, before.visible_diff(after))
+
+    def test_wrapped(self):
+        self.assertRoundtrip("""
+        +------+
+        |$rw   |
+        +------+
+        |>1    |
+        |>stuff|
+        |abcdef+
+        |ghijkl+
+        |mnopq |
+        |>@    |
+        +------+
+        """)
+
+    def test_blank_lines(self):
+        self.assertRoundtrip("""
+        +------+
+        |$rw   |
+        +------+
+        |>1    |
+        |>x    |
+        |abcde |
+        |>@    |
+        ~      ~
+        ~      ~
+        +------+
+        """)

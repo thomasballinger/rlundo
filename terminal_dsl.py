@@ -92,23 +92,93 @@ def split_lines(lines, width):
     return rows
 
 
+def horzcat(a, b):
+    a_lines = a.split('\n')
+    b_lines = b.split('\n')
+    width = max(len(line) for line in a_lines)
+    full_lines = [line + ' '*(width - len(line)) for line in a_lines]
+    full_left = full_lines + [' '*width] * max(0, len(b_lines) - len(a_lines))
+    full_right = b_lines + [''] * max(0, len(a_lines) - len(b_lines))
+    assert len(full_left) == len(full_right)
+    return '\n'.join(l+r for l, r in zip(full_left, full_right))
+
+
 class TerminalState(_TerminalStateBase):
-    @classmethod
-    def from_redundant_information(cls):
-        """Uses extra parameters to check derived properties"""
-        pass
 
     @classmethod
     def from_tmux_pane(cls, pane):
         import tmux
-        tmux.all_contents()
-        return TerminalState(
-            lines=['a-a-a-', 'b-b-b-', ''],
-            cursor_line=2,
-            cursor_offset=0,
-            width=6,
-            height=3,
-            history_height=0)
+        lines = tmux.all_lines(pane)
+        history_height = len(tmux.scrollback(pane))
+        print 'tmux.all_contents:', tmux.all_contents(pane)
+        print 'tmux.visible:', tmux.visible(pane)
+        print 'history_height:', history_height
+        print 'tmux.scrollback:', tmux.scrollback(pane)
+        width, height = tmux.width(pane), tmux.height(pane)
+
+        cursor_row, cursor_col = tmux.cursor_pos(pane)
+
+        #TODO deal with cursors not at the bottom
+
+        termstate = TerminalState(
+            lines=lines,
+            cursor_line=len(lines) - 1,
+            cursor_offset=len(lines[-1]),
+            width=width,
+            height=height,
+            history_height=history_height)
+        print termstate
+
+        #assert termstate.cursor_row == cursor_row
+        #assert termstate.cursor_column == cursor_col
+
+        return termstate
+
+    def visible_diff(self, other):
+        if self != other:
+            s1, s2 = self.render(), other.render()
+            display = horzcat(s1, s2)
+            if len(self.lines) != len(other.lines):
+                error = ('Terminal states have different number of lines:'
+                         '%d and %d' % (len(self.lines), len(other.lines)))
+            elif self.lines != other.lines:
+                for i, (a, b) in enumerate(zip(self.lines, other.lines)):
+                    if a != b:
+                        error = "line %d is the first line to differ:" % (i, )
+                        break
+            else:
+                error = "Terminal states differ somehow:"
+            return error + '\n' + display + '\n' + repr(self) + '\n' + repr(other)
+        return 'TerminalStates do not differ'
+
+    def render(self):
+        horz_border = '+' + '-'*self.width + '+'
+        output = []
+        output.append(horz_border)
+        row_num = -1
+        in_history = True
+        cursor_row, cursor_col = self.cursor_row, self.cursor_column
+        cursor_row = self.cursor_row
+        for line in self.lines:
+            line_rows = []
+            for row in split_line(line, self.width):
+                row_num += 1
+                if in_history and row_num == self.history_height:
+                    output.append(horz_border)
+                    row_num = 0
+                    in_history = False
+                if not in_history and row_num == cursor_row:
+                    row = row[:cursor_row] + '@' + row[cursor_col+1:]
+                line_rows.append('|' + row + ' '*(self.width - len(row)) + '|')
+            line_rows = ([r[:-1]+'+' for r in line_rows[:len(line_rows)-1]] +
+                         [line_rows[-1]])
+
+            output.extend(line_rows)
+        while row_num < self.height - 1:
+            output.append('~' + ' '*self.width + '~')
+            row_num += 1
+        output.append(horz_border)
+        return '\n'.join(output)
 
     @property
     def visible_rows(self):
