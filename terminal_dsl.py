@@ -127,6 +127,7 @@ class TerminalState(_TerminalStateBase):
             width=width,
             height=height,
             history_height=history_height)
+        print termstate
 
         #assert termstate.cursor_row == cursor_row
         #assert termstate.cursor_column == cursor_col
@@ -173,6 +174,9 @@ class TerminalState(_TerminalStateBase):
                          [line_rows[-1]])
 
             output.extend(line_rows)
+        while row_num < self.height - 1:
+            output.append('~' + ' '*self.width + '~')
+            row_num += 1
         output.append(horz_border)
         return '\n'.join(output)
 

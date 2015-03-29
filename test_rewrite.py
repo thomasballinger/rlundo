@@ -363,40 +363,55 @@ class UndoScenario(tmux.TmuxPane):
         """ % (self.python_script.name, )
 
     def python_script_contents(self):
+        # TODO: Move this out to its own file, import command aliases
         return textwrap.dedent("""\
         import sys
         move_up = u'\x1bM'
-        move_right = u'\x1b[C''
-        moe_left = u'\b'
+        move_right = u'\x1b[C'
+        move_left = u'\b'
         clear_eol = u'\x1b[K'
         clear_eos = u'\x1b[J'
 
-        def make_blank_line_below():
+        def make_blank_line_below(n):
             "Move cursor back to prev spot after hitting return"
             sys.stdout.write(move_up)
-            sys.stdout.write(move_right)
+            for _ in range(20):
+                sys.stdout.write(move_left)
+            for _ in range(n):
+                sys.stdout.write(move_right)
             sys.stdout.write(clear_eos)
             sys.stdout.flush()
 
         def move_cursor_back_up():
-            sys.stdout.write(move_left)
             sys.stdout.write(move_up)
+            sys.stdout.write(move_up)
+            sys.stdout.flush()
+
+        def move_cursor_up_and_over_and_clear(n):
+            sys.stdout.write(move_up)
+            sys.stdout.write(move_up)
+            for _ in range(20):
+                sys.stdout.write(move_left)
+            for _ in range(n):
+                sys.stdout.write(move_right)
             sys.stdout.write(clear_eos)
-            sys.stdout.write(move_up)
-            sys.stdout.write(move_right)
+            sys.stdout.flush()
 
-        def move_cursor_over_to(n):
-
-        raw_input(">")
-        while True:
-            inp = raw_input()
-            if inp == 'up':
-                make_blank_line_below()
+        def dispatch(prompt=None):
+            if prompt:
+                inp = raw_input(prompt)
+            else:
+                inp = raw_input()
+            if inp.startswith('1c'):
+                make_blank_line_below(int(inp[2:]))
             elif inp == 'up2':
                 move_cursor_back_up()
-            elif inp.startswith('ct'):
-                move_cursor_over(int(inp[2:]))
+            elif inp.startswith('uc'):
+                move_cursor_up_and_over_and_clear(int(inp[2:]))
 
+        dispatch(">")
+        while True:
+            dispatch()
         """)
 
     def __init__(self, termstate):
@@ -478,13 +493,24 @@ class UndoScenario(tmux.TmuxPane):
                     tmux.wait_until_cursor_moves(pane, row, col)
                 if i != len(lines) - 1:
                     pane.enter()
-        row, col = tmux.cursor_pos
-        assert col in [0, 1]
-        for _ in range(row, termstate.height - 1):
-            pane.enter()
-        for _ in range(row, termstate.height - 1):
-            pane.tmux('send-keys', 
+        row, col = tmux.cursor_pos(pane)
 
+        additional_required_blank_rows = (
+            termstate.history_height - len(tmux.scrollback(pane)) +
+            termstate.height - row - 1)
+        assert additional_required_blank_rows >= 0
+        assert col == len(line) % termstate.width  # TODO allow other columns
+        if additional_required_blank_rows == 1:
+            pane.tmux('1c'+str(col))
+            pane.enter()
+        elif additional_required_blank_rows > 1:
+            for _ in range(additional_required_blank_rows - 1):
+                pane.enter()
+            for _ in range(additional_required_blank_rows - 2):
+                pane.tmux('send-keys', 'up2')
+                pane.enter()
+            pane.tmux('send-keys', 'uc'+str(col))
+            pane.enter()
 
 
 class TestUndoScenario(unittest.TestCase):
