@@ -70,7 +70,7 @@ to restore previous terminal states
   - it seems to be something racy - removing logging statements in
     pity makes it happen more!
 - [ ] refactor rewrite.py to use a class instead of globals
-- [ ] set up testing harness: use Tmux
+- [x] set up testing harness: use Tmux
   - [x] programmatically set up tmux
     - [x] programmatically set up terminal state from a diagram
   - [x] request state of scrollback buffer and screen
@@ -78,12 +78,14 @@ to restore previous terminal states
   - [x] implement cursor query to discover how cursor moved
     - [x] test cursor query with tmux
   - [x] count lines from sequence
-    - [ ] also use width to calculate
+    - [x] also use width to calculate
   - [x] figure out if wrapping works (I'm suspicious it doesn't,
         and we'll need calculate wrapping ourselves
   - [x] slow mode: does tmux test visible, with delay
-  - [ ] display test failures with pretty diffs
+  - [x] display test failures with pretty diffs
 - [ ] Python 3 compatibility
+- [ ] deal with using reverse-iterative-search (currently results
+      in clearing too many lines)
 
 - Test cases:
   - [x] same screen, no line wrapping

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import sys
 
 from rlundoable import modify_env_with_modified_rl
