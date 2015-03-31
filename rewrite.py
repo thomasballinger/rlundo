@@ -75,7 +75,7 @@ def restore():
             write(terminal.move_up)
         middle = terminal.height // 2
 
-        for line in history(''.join(outputs))[-middle:]:
+        for line in history(''.join(outputs))[:-1][-middle:]:
             write(line+'\n\r')
 
     else:
