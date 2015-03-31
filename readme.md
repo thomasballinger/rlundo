@@ -22,14 +22,14 @@ which will work if you compile a new readline
 
 ##rlundoable
 
-test with 
+try it with 
 
     $ python rlundo.py /usr/bin/irb
 
 
 ##rewrite.py
 
-test with 
+try it with 
 
     $ python rewrite.py
 
@@ -42,6 +42,11 @@ to save terminal states, and
     nc localhost 4243
 
 to restore previous terminal states
+
+##Running the tests
+
+* nosetests
+* you're need to install a recent version of tmux, 1.9a seems to work
 
 
 #Task list

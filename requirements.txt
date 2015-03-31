@@ -1,7 +1,5 @@
 blessings==1.6
 nose==1.3.4
 termcast-client==0.1.3
--e git+git@github.com:thomasballinger/termtracker.git@912754c82b7c4d2767fb940f2318739cfdf7d9df#egg=tmp-master
 tmuxp==0.1.12
 urwid==1.3.0
--e git+git@github.com:doy/libvt100-python.git@f41c57028f8c3a0f27c46991d5081111c9daf6ec#egg=vt100-master
