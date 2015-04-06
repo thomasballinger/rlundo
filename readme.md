@@ -91,6 +91,7 @@ to restore previous terminal states
 - [ ] Python 3 compatibility
 - [ ] deal with using reverse-iterative-search (currently results
       in clearing too many lines)
+- [ ] Watch https://www.youtube.com/watch?t=544&v=EpYMRd1ZWDM and learn lessons from it!
 
 - Test cases:
   - [x] same screen, no line wrapping

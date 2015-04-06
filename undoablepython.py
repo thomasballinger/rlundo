@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import code
 import os
 import socket
