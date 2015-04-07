@@ -92,6 +92,8 @@ to restore previous terminal states
 - [ ] deal with using reverse-iterative-search (currently results
       in clearing too many lines)
 - [ ] Watch https://www.youtube.com/watch?t=544&v=EpYMRd1ZWDM and learn lessons from it!
+- [ ] Redo (run most recently undone command)
+- [ ] Add undone commands to parent process rl history
 
 - Test cases:
   - [x] same screen, no line wrapping

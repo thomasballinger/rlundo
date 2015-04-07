@@ -1,3 +1,12 @@
+"""
+rewrite runs a command as a subprocess, and has an api for saving
+terminal state.
+
+Opening a connection to localhost:4242 will save the current state
+Opening a connection to localhost:4243 will restore the state as it
+was two saved states ago.
+"""
+
 import os
 import socket
 import sys
