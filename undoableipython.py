@@ -100,9 +100,9 @@ def interact(self, display_banner=None):
                     # This is the only ipython line of code in this block
                     # +++++++++++++++++++++++++++++++++++++++++++++++++++
                     line = self.raw_input(prompt)
-                # +++++++++++++++++++++++++++++++++++++++++++++++++++
-                # This is the only ipython line of code in this block
-                # +++++++++++++++++++++++++++++++++++++++++++++++++++
+                    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+                    # This is the only ipython line of code in this block
+                    # +++++++++++++++++++++++++++++++++++++++++++++++++++
                 except KeyboardInterrupt:
                     line = "undo"
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+import os
 
 from rlundoable import modify_env_with_modified_rl
 from rewrite import run_with_listeners
@@ -10,10 +11,14 @@ import undoableipython
 def start_undoable_rl(args):
 
     if undoablepython.rl_is_python(args[1]):
-        undoablepython.start_undoable_python(sys.argv[1:])
+        commands = ["python", "rewrite.py", "python", "undoablepython.py"]
+        commands.extend(args[2:])
+        os.system(" ".join(commands))
 
     elif undoableipython.rl_is_ipython(args[1]):
-        undoableipython.start_undoable_ipython(sys.argv[1:])
+        commands = ["python", "rewrite.py", "python", "undoableipython.py"]
+        commands.extend(args[2:])
+        os.system(" ".join(commands))
 
     else:
         modify_env_with_modified_rl()

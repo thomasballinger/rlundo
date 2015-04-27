@@ -5,7 +5,13 @@
 
 For a simple demo not requiring c compiling, try
 
-    $ python rewrite.py python undoablepython.py
+    $ python rlundo.py python
+    $ python rlundo.py ipython
+
+You can undo using ctrl+c
+
+![undo with ctrl+c](http://ballingt.com/assets/undoable_ipython.gif)
+
 
 The goal is for this to work with any interpreter, as in
 
@@ -131,9 +137,10 @@ to restore previous terminal states
   - [ ] come up with a reasonable REPL task to benchmark (use other benchmarks?)
     - [ ] trying out syntax (inc. errors)
     - [ ] web scraping
-- [ ] use ctrl key instead of typing 'undo'
 - [ ] figure out how to intercept Python readline
-- [ ] make ctrl-c work in undoablepython.py
+- [x] make ctrl-c work in undoablepython.py
+- [x] make ctrl-c work in undoableipython.py
+- [ ] use ctrl key instead of typing 'undo' in other interpreters
 - [ ] solution for haskeline
 
 

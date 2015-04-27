@@ -56,6 +56,8 @@ def readline(prompt):
             s = input(prompt)
         except EOFError:
             readline.on_exit()
+        except KeyboardInterrupt:
+            s = 'undo'
         if s == 'undo':
             restore()
             readline.on_undo()
