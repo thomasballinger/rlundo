@@ -13,6 +13,7 @@ import sys
 import threading
 import logging
 import locale
+import re
 
 import blessings
 import pity
@@ -41,14 +42,27 @@ def save():
 def count_lines(msg, width):
     """Number of lines msg would move cursor down"""
     msg = msg.decode(encoding)
-    return sum([max(0, (len(line) - 1) // width) + 1
-                for line in msg.split('\n')]) - 1
+    resized_lines = [_line_resizes(line, width) for line in msg.split('\n')]
+    num_lines = sum(resized_lines) - 1
+    return num_lines
+
+
+def _line_len(line):
+    """Calculate len of a string without colour escape characters."""
+    line_without_colours = re.sub("\x1b[[]0(;\d\d)?m", "", line)
+    return len(line_without_colours)
+
+
+def _line_resizes(line, width):
+    """Calculate how many lines will need a line to be printed due to terminal
+    resizing."""
+    return max(0, (_line_len(line) - 1) // width) + 1
 
 
 def linesplit(lines, width):
     rows = []
     for line in lines:
-        rows.extend(line[i:i+width] for i in range(0, len(line), width))
+        rows.extend(line[i:i + width] for i in range(0, len(line), width))
     return rows
 
 
@@ -88,7 +102,7 @@ def restore():
         middle = terminal.height // 2
 
         for line in history(''.join(outputs))[:-1][-middle:]:
-            write(line+'\n\r')
+            write(line + '\n\r')
 
     else:
         logger.debug('moving cursor %d lines up for %r' % (n, lines))
@@ -135,4 +149,5 @@ def run_with_listeners(args):
 
 
 if __name__ == '__main__':
-    run_with_listeners(sys.argv[1:] if sys.argv[1:] else ['python', '-c', "while True: raw_input('>')"])
+    run_with_listeners(sys.argv[1:] if sys.argv[1:] else [
+                       'python', '-c', "while True: raw_input('>')"])

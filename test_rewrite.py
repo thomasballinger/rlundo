@@ -5,6 +5,7 @@ import socket
 import textwrap
 import time
 import unittest
+import nose
 
 import terminal_dsl
 import tmux
@@ -145,6 +146,11 @@ class TestRewriteHelpers(unittest.TestCase):
         self.assertEqual(rewrite.count_lines("1234\n123456", 4), 2)
         self.assertEqual(rewrite.count_lines("1234\n123456", 10), 1)
         self.assertEqual(rewrite.count_lines("> undo\r\n> 1\r\n1\r\n", 10), 3)
+
+        with open("input_with_colours.txt", "r") as f:
+            data = f.read()
+
+        self.assertEqual(rewrite.count_lines(data, 80), 6)
 
     def test_linesplit(self):
         self.assertEqual(rewrite.linesplit(["1234", "123456"], 4),
@@ -560,3 +566,6 @@ class TestUndoScenario(unittest.TestCase):
         ~      ~
         +------+
         """)
+
+if __name__ == '__main__':
+    nose.run(defaultTest=__name__)
