@@ -7,6 +7,7 @@ import bdb
 from IPython.utils.warn import warn
 from IPython.terminal.interactiveshell import TerminalInteractiveShell
 from IPython import start_ipython
+from IPython.utils.text import num_ini_spaces
 
 
 def rl_is_ipython(rl_path):
@@ -190,8 +191,99 @@ def interact(self, display_banner=None):
     self.exit_now = False
 
 
+def raw_input_original(prompt):
+
+    from functools import partial
+    import socket
+
+    if sys.version_info.major == 2:
+        ConnectionRefusedError = socket.error
+
+    def connect_and_wait_for_close(port):
+        s = socket.socket()
+        try:
+            s.connect(('localhost', port))
+        except ConnectionRefusedError:
+            pass
+        else:
+            assert b'' == s.recv(1024)
+
+    save = partial(connect_and_wait_for_close, port=4242)
+    restore = partial(connect_and_wait_for_close, port=4243)
+
+    while True:
+        save()
+        try:
+            if py3compat.PY3:
+                line = input(prompt)
+            else:
+                line = raw_input(prompt)
+        except KeyboardInterrupt:
+            line = "undo"
+
+        if line == "undo":
+            restore()
+            os._exit(42)
+
+        pid = os.fork()
+        is_child = pid == 0
+
+        # if the process is not the parent, just carry on
+        if is_child:
+            break
+
+        else:
+            while True:
+                try:
+                    status = os.waitpid(pid, 0)
+                    break
+                except KeyboardInterrupt:
+                    pass
+            exit_code = status[1] // 256
+            if not exit_code == 42:
+                os._exit(exit_code)
+
+    return line
+
+
+def raw_input_replacement(self, prompt=''):
+    """Write a prompt and read a line.
+
+    The returned line does not include the trailing newline.
+    When the user enters the EOF key sequence, EOFError is raised.
+
+    Parameters
+    ----------
+
+    prompt : str, optional
+      A string to be printed to prompt the user.
+    """
+    # raw_input expects str, but we pass it unicode sometimes
+    prompt = py3compat.cast_bytes_py2(prompt)
+
+    try:
+        line = py3compat.str_to_unicode(raw_input_original(prompt))
+    except ValueError:
+        warn("\n********\nYou or a %run:ed script called sys.stdin.close()"
+             " or sys.stdout.close()!\nExiting IPython!\n")
+        self.ask_exit()
+        return ""
+
+    # Try to be reasonably smart about not re-indenting pasted input more
+    # than necessary.  We do this by trimming out the auto-indent initial
+    # spaces, if the user's actual input started itself with whitespace.
+    if self.autoindent:
+        if num_ini_spaces(line) > self.indent_current_nsp:
+            line = line[self.indent_current_nsp:]
+            self.indent_current_nsp = 0
+
+    return line
+
+
 def patch_ipython():
-    TerminalInteractiveShell.interact = interact
+    # TerminalInteractiveShell.interact = interact
+    # TerminalInteractiveShell.raw_input_original = property(raw_input_original)
+    TerminalInteractiveShell.raw_input = raw_input_replacement
 
 
 def start_undoable_ipython(args=None):
