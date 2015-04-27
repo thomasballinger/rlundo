@@ -12,6 +12,7 @@ import socket
 import sys
 import threading
 import logging
+import locale
 
 import blessings
 import pity
@@ -19,6 +20,7 @@ from findcursor import get_cursor_position
 
 # version 1: record sequences, guess how many lines to go back up
 terminal = blessings.Terminal()
+encoding = locale.getdefaultlocale()[1]
 
 outputs = [b'']
 
@@ -38,6 +40,7 @@ def save():
 
 def count_lines(msg, width):
     """Number of lines msg would move cursor down"""
+    msg = msg.decode(encoding)
     return sum([max(0, (len(line) - 1) // width) + 1
                 for line in msg.split('\n')]) - 1
 
