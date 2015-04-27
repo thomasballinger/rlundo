@@ -1,8 +1,5 @@
 #rlundo
 
-
-
-
 For a simple demo not requiring c compiling, try
 
     $ python rlundo.py python
