@@ -4,6 +4,7 @@ from subprocess import Popen, PIPE
 
 
 def modify_env_with_modified_rl():
+    """Modifiy enviornment to enable undo features in the repl."""
     modified_readline_path = os.path.join(os.path.dirname(os.path.realpath('__file__')),
                                           'rlundoable/modified-readline-6.3/shlib')
 
@@ -12,6 +13,7 @@ def modify_env_with_modified_rl():
     else:
         os.environ["LD_LIBRARY_PATH"] = ':'.join([modified_readline_path])
         os.environ["LD_PRELOAD"] = '/lib/x86_64-linux-gnu/libtinfo.so.5'
+
 
 def run_with_modified_rl(args):
     modify_env_with_modified_rl()

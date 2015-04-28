@@ -39,7 +39,7 @@ restore = partial(connect_and_wait_for_close, port=4243)
 
 def log(msg):
     if DEBUG:
-        logger.debug(str(os.getpid())+': ' + str(msg) + '\n')
+        logger.debug(str(os.getpid()) + ': ' + str(msg) + '\n')
 
 
 def readline(prompt):
@@ -56,6 +56,8 @@ def readline(prompt):
             s = input(prompt)
         except EOFError:
             readline.on_exit()
+        except KeyboardInterrupt:
+            s = 'undo'
         if s == 'undo':
             restore()
             readline.on_undo()
@@ -88,7 +90,8 @@ def readline(prompt):
             from_child = os.read(read_fd, 1)
             if from_child == b'e':
                 readline.on_exit()
-            log('parent %r received response from child %r: %r' % (os.getpid(), pid, from_child))
+            log('parent %r received response from child %r: %r' %
+                (os.getpid(), pid, from_child))
             continue
 
 
@@ -97,6 +100,7 @@ readline.on_exit = sys.exit
 
 
 class ForkUndoConsole(code.InteractiveConsole):
+
     def raw_input(self, prompt=""):
         """Write a prompt and read a line.
 
@@ -110,6 +114,19 @@ class ForkUndoConsole(code.InteractiveConsole):
         """
         return readline(prompt)
 
-if __name__ == '__main__':
+
+def rl_is_python(rl_path):
+    return os.path.basename(rl_path) == "python"
+
+
+def start_undoable_python(args=None):
     console = ForkUndoConsole()
+
+    if args:
+        sys.argv = args
+
     console.interact()
+
+
+if __name__ == '__main__':
+    start_undoable_python()
