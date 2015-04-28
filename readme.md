@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/thomasballinger/rlundo.svg?branch=master)](https://travis-ci.org/thomasballinger/rlundo)
+
 #rlundo
 
 rlundo grants interactive interpreters magical undo powers!
