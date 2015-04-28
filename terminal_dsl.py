@@ -110,10 +110,10 @@ class TerminalState(_TerminalStateBase):
         import tmux
         lines = tmux.all_lines(pane)
         history_height = len(tmux.scrollback(pane))
-        print 'tmux.all_contents:', tmux.all_contents(pane)
-        print 'tmux.visible:', tmux.visible(pane)
-        print 'history_height:', history_height
-        print 'tmux.scrollback:', tmux.scrollback(pane)
+        #print('tmux.all_contents:', tmux.all_contents(pane))
+        #print('tmux.visible:', tmux.visible(pane))
+        #print('history_height:', history_height)
+        #print('tmux.scrollback:', tmux.scrollback(pane))
         width, height = tmux.width(pane), tmux.height(pane)
 
         cursor_row, cursor_col = tmux.cursor_pos(pane)
@@ -127,7 +127,7 @@ class TerminalState(_TerminalStateBase):
             width=width,
             height=height,
             history_height=history_height)
-        print termstate
+        #print(termstate)
 
         #assert termstate.cursor_row == cursor_row
         #assert termstate.cursor_column == cursor_col
