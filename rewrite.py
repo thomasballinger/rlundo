@@ -40,7 +40,6 @@ def save():
 
 def count_lines(msg, width):
     """Number of lines msg would move cursor down"""
-    msg = msg.decode(encoding)
     return sum([max(0, (len(line) - 1) // width) + 1
                 for line in msg.split('\n')]) - 1
 
@@ -87,7 +86,7 @@ def restore():
             write(terminal.move_up)
         middle = terminal.height // 2
 
-        for line in history(''.join(outputs))[:-1][-middle:]:
+        for line in history(b''.join(outputs))[:-1][-middle:]:
             write(line+'\n\r')
 
     else:

@@ -130,16 +130,16 @@ class TestDiagramsWithTmux(unittest.TestCase, DiagramsWithTmux):
 class TestRewriteHelpers(unittest.TestCase):
     def test_history(self):
         self.assertEqual(rewrite.history(
-                         ['>>> print("hello\\n"*3)\nhello\nhello\nhello\n',
-                          '>>> 1 + 1\n2\n',
-                          '>>> ']),
-                         ['>>> print("hello\\n"*3)',
-                          'hello',
-                          'hello',
-                          'hello',
-                          '>>> 1 + 1',
-                          '2',
-                          '>>> '])
+                         [b'>>> print("hello\\n"*3)\nhello\nhello\nhello\n',
+                          b'>>> 1 + 1\n2\n',
+                          b'>>> ']),
+                         [b'>>> print("hello\\n"*3)',
+                          b'hello',
+                          b'hello',
+                          b'hello',
+                          b'>>> 1 + 1',
+                          b'2',
+                          b'>>> '])
 
     def test_count_lines(self):
         self.assertEqual(rewrite.count_lines("1234\n123456", 4), 2)
@@ -432,7 +432,7 @@ class UndoScenario(tmux.TmuxPane):
         >>> termstate = terminal_dsl.TerminalState(
         ...     ['>a', 'b', 'c', '>d', 'e', '>'], cursor_line=5,
         ...     cursor_offset=1, width=10, height=10, history_height=0)
-        >>> UndoScenario.validate_termstate(termstate)
+        >>> UndoScenario.validate_termstate(termstate) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
             ...
         ValueError: termstate doesn't start with a call to rw: u'>a'
@@ -458,8 +458,9 @@ class UndoScenario(tmux.TmuxPane):
         ...     cursor_offset=1, width=10, height=10, history_height=0)
         >>> with UndoScenario(termstate) as t:
         ...     UndoScenario.initialize(t, termstate)
-        ...     print(tmux.visible_after_prompt(t, expected=u'>'))
-        [u'$rw', u'>a', u'b', u'c', u'>d', u'e', u'>']
+        ...     (tmux.visible_after_prompt(t, expected=u'>') == 
+        ...     [u'$rw', u'>a', u'b', u'c', u'>d', u'e', u'>'])
+        True
         """
         self.check_port(4242)
         self.check_port(4243)

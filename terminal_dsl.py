@@ -77,7 +77,7 @@ def split_line(line, width):
     """
     if line == '':
         return ['']
-    splits = range(0, len(line), width) + [len(line)]
+    splits = list(range(0, len(line), width)) + [len(line)]
     return [line[start:end] for start, end in zip(splits[:-1], splits[1:])]
 
 
