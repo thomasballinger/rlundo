@@ -1,6 +1,8 @@
 #rlundo
 
-For a simple demo not requiring c compiling, try
+rlundo grants interactive interpreters magical undo powers!
+Some interpreters work without requiring compiling
+a new readline library:
 
     $ python rlundo.py python
     $ python rlundo.py ipython
@@ -9,19 +11,22 @@ You can undo using ctrl+c
 
 ![undo with ctrl+c](http://ballingt.com/assets/undoable_ipython.gif)
 
-
 The goal is for this to work with any interpreter, as in
 
     $ python rlundo.py /usr/bin/irb
 
-which will work if you compile a new readline
-
-
 ![rlundo preview example](http://ballingt.com/assets/rlundopreview.gif)
 
+which will work if you compile the modified readline library with
+
+    cd rlundoable
+    make -f Makefileosx
+
+There are three major parts to this project:
 
 * rlundoable - a patch for readline that makes it fork to save state
 * rewrite.py - rewinds the terminal state to how it was at the last prompt
+* undoableINTERPRETER - alternative scripts for running specific interactive interpreters so that they have undo
 
 ##rlundoable
 
