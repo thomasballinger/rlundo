@@ -134,4 +134,4 @@ def run_with_listeners(args):
 
 
 if __name__ == '__main__':
-    run_with_listeners(sys.argv[1:] if sys.argv[1:] else ['python', '-c', "while True: raw_input('>')"])
+    run_with_listeners(sys.argv[1:] if sys.argv[1:] else ['python', '-c', "while True: input('>') if type(' ') == type(u' ') else raw_input('>')"])
