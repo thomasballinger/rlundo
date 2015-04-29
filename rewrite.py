@@ -50,6 +50,7 @@ def count_lines(msg, width):
 def _line_len(line):
     """Calculate len of a string without colour escape characters."""
     line_without_colours = re.sub("\x1b[[]0(;\d\d)?m", "", line)
+    line_without_colours = line_without_colours.strip("\n")
     return len(line_without_colours)
 
 

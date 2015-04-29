@@ -149,7 +149,6 @@ class TestRewriteHelpers(unittest.TestCase):
 
         with open("input_with_colours.txt", "r") as f:
             data = f.read()
-
         self.assertEqual(rewrite.count_lines(data, 80), 6)
 
     def test_linesplit(self):
@@ -157,6 +156,19 @@ class TestRewriteHelpers(unittest.TestCase):
                          ["1234", "1234", "56"])
         self.assertEqual(rewrite.linesplit(["1234", "123456"], 10),
                          ["1234", "123456"])
+
+    def test_line_len(self):
+        self.assertEqual(rewrite._line_len("1234"), 4)
+        self.assertEqual(rewrite._line_len("1234\n"), 4)
+        self.assertEqual(rewrite._line_len("\x1b[0;32m1234"), 4)
+        self.assertEqual(rewrite._line_len("\x1b[0m1234"), 4)
+
+    def test_line_resizes(self):
+        self.assertEqual(rewrite._line_resizes("1234", 4), 1)
+        self.assertEqual(rewrite._line_resizes("1234", 3), 2)
+        self.assertEqual(rewrite._line_resizes("1234", 2), 2)
+        self.assertEqual(rewrite._line_resizes("1234", 1), 4)
+        self.assertEqual(rewrite._line_resizes("\x1b[0;32m1234", 2), 2)
 
 
 class TestRunWithTmux(unittest.TestCase):
