@@ -78,13 +78,10 @@ class ActualUndo(tmux.TmuxPane):
         return tmux.TmuxPane.__enter__(self)
 
 
-class TestUndoableIpythonWithTmux(unittest.TestCase):
+class IPyPrompt(object):
 
-    """Use ActualUndo and tmux to send commands to an IPython repl and check
-    undo feature rewrite the terminal as expected.
-    """
-
-    def ipy_in_formatted(self, num):
+    @classmethod
+    def in_formatted(cls, num):
         """Build ipython "In" prompt with formatting.
 
         For some reason tmux doesn't deal with formatting in the same way that
@@ -93,7 +90,8 @@ class TestUndoableIpythonWithTmux(unittest.TestCase):
         # return u'\x1b[34mIn [\x1b[1m{}\x1b[0;34m]:'.format(num)
         return u'\x1b[34mIn [\x1b[1m{}\x1b[0m]:'.format(num)
 
-    def ipy_out_formatted(self, num):
+    @classmethod
+    def out_formatted(cls, num):
         """Build ipython "Out" prompt with formatting.
 
         For some reason tmux doesn't deal with formatting in the same way that
@@ -102,7 +100,8 @@ class TestUndoableIpythonWithTmux(unittest.TestCase):
         # return u'\x1b[31mOut[\x1b[1m{}\x1b[0;34m]:'.format(num)
         return u'\x1b[31mOut[\x1b[1m{}\x1b[0m]:'.format(num)
 
-    def ipy_new_l_formatted(self):
+    @classmethod
+    def new_l_formatted(cls):
         """Build ipython new line in the same "In" prompt with formatting.
 
         For some reason tmux doesn't deal with formatting in the same way that
@@ -111,38 +110,48 @@ class TestUndoableIpythonWithTmux(unittest.TestCase):
         # return u'\x1b[34m   ...: \x1b[0m'
         return u'\x1b[34m   ...: \x1b[39m'
 
-    def ipy_in(self, num):
+    @classmethod
+    def in_prompt(cls, num):
         """Build ipython "In" prompt without formatting."""
         return u'In [{}]:'.format(num)
 
-    def ipy_out(self, num):
+    @classmethod
+    def out_prompt(cls, num):
         """Build ipython "Out" prompt without formatting."""
         return u'Out[{}]:'.format(num)
 
-    def ipy_new_l(self):
+    @classmethod
+    def new_l_prompt(cls):
         """Build ipython new line inside an "In" prompt without formatting."""
         return u'   ...:'
+
+
+class TestUndoableIpythonWithTmux(unittest.TestCase):
+
+    """Use ActualUndo and tmux to send commands to an IPython repl and check
+    undo feature rewrite the terminal as expected.
+    """
 
     # @unittest.skip("skip")
     def test_simple(self):
         """Test sending commands and reading formatted output with tmux."""
         with ActualUndo(80, 30) as t:
-            tmux.send_command(t, 'ipy', prompt=self.ipy_in_formatted(1))
-            tmux.send_command(t, 'a = 1', prompt=self.ipy_in_formatted(2))
-            tmux.send_command(t, 'a', prompt=self.ipy_in_formatted(3))
+            tmux.send_command(t, 'ipy', prompt=IPyPrompt.in_formatted(1))
+            tmux.send_command(t, 'a = 1', prompt=IPyPrompt.in_formatted(2))
+            tmux.send_command(t, 'a', prompt=IPyPrompt.in_formatted(3))
             tmux.send_command(t, 'def foo():',
-                              prompt=self.ipy_new_l_formatted())
+                              prompt=IPyPrompt.new_l_formatted())
             tmux.send_command(t, 'print "hi"',
-                              prompt=self.ipy_new_l_formatted())
-            tmux.send_command(t, ' ', prompt=self.ipy_in_formatted(4))
+                              prompt=IPyPrompt.new_l_formatted())
+            tmux.send_command(t, ' ', prompt=IPyPrompt.in_formatted(4))
             output = tmux.visible(t)
-            lines = [self.ipy_in_formatted(1) + ' \x1b[39ma = 1',
-                     self.ipy_in_formatted(2) + ' \x1b[39ma',
-                     self.ipy_out_formatted(2) + ' \x1b[39m1',
-                     self.ipy_in_formatted(3) + ' \x1b[39mdef foo():',
-                     self.ipy_new_l_formatted() + '    print "hi"',
-                     self.ipy_new_l_formatted() + '',
-                     self.ipy_in_formatted(4)]
+            lines = [IPyPrompt.in_formatted(1) + ' \x1b[39ma = 1',
+                     IPyPrompt.in_formatted(2) + ' \x1b[39ma',
+                     IPyPrompt.out_formatted(2) + ' \x1b[39m1',
+                     IPyPrompt.in_formatted(3) + ' \x1b[39mdef foo():',
+                     IPyPrompt.new_l_formatted() + '    print "hi"',
+                     IPyPrompt.new_l_formatted() + '',
+                     IPyPrompt.in_formatted(4)]
             self.assertEqual(output[-7:], lines)
 
     # @unittest.skip("skip")
@@ -151,21 +160,21 @@ class TestUndoableIpythonWithTmux(unittest.TestCase):
         with ActualUndo(80, 30) as t:
 
             # type some commands
-            tmux.send_command(t, 'ipy', prompt=self.ipy_in_formatted(1))
-            tmux.send_command(t, 'a = 1', prompt=self.ipy_in_formatted(2))
-            tmux.send_command(t, 'a', prompt=self.ipy_in_formatted(3))
+            tmux.send_command(t, 'ipy', prompt=IPyPrompt.in_formatted(1))
+            tmux.send_command(t, 'a = 1', prompt=IPyPrompt.in_formatted(2))
+            tmux.send_command(t, 'a', prompt=IPyPrompt.in_formatted(3))
             output = tmux.visible_without_formatting(t)
-            lines = [self.ipy_in(1) + ' a = 1',
-                     self.ipy_in(2) + ' a',
-                     self.ipy_out(2) + ' 1',
-                     self.ipy_in(3)]
+            lines = [IPyPrompt.in_prompt(1) + ' a = 1',
+                     IPyPrompt.in_prompt(2) + ' a',
+                     IPyPrompt.out_prompt(2) + ' 1',
+                     IPyPrompt.in_prompt(3)]
             self.assertEqual(output[-4:], lines)
 
             # undo
-            tmux.send_command(t, 'undo', prompt=self.ipy_in_formatted(2))
+            tmux.send_command(t, 'undo', prompt=IPyPrompt.in_formatted(2))
             output = tmux.visible_without_formatting(t)
             self.assertEqual(output[-2:],
-                             lines[:1] + [self.ipy_in(2)])
+                             lines[:1] + [IPyPrompt.in_prompt(2)])
 
     # @unittest.skip("skip")
     def test_undo_multiple_input_lines(self):
@@ -173,31 +182,31 @@ class TestUndoableIpythonWithTmux(unittest.TestCase):
         with ActualUndo(80, 30) as t:
 
             # type some commands
-            tmux.send_command(t, 'ipy', prompt=self.ipy_in_formatted(1))
+            tmux.send_command(t, 'ipy', prompt=IPyPrompt.in_formatted(1))
             tmux.send_command(t, 'def foo():',
-                              prompt=self.ipy_new_l_formatted())
+                              prompt=IPyPrompt.new_l_formatted())
             tmux.send_command(t, 'print "hi"',
-                              prompt=self.ipy_new_l_formatted())
-            tmux.send_command(t, ' ', prompt=self.ipy_in_formatted(2))
-            tmux.send_command(t, 'foo()', prompt=self.ipy_in_formatted(3))
+                              prompt=IPyPrompt.new_l_formatted())
+            tmux.send_command(t, ' ', prompt=IPyPrompt.in_formatted(2))
+            tmux.send_command(t, 'foo()', prompt=IPyPrompt.in_formatted(3))
             output = tmux.visible_without_formatting(t)
-            lines = [self.ipy_in(1) + ' def foo():',
-                     self.ipy_new_l() + '     print "hi"',
-                     self.ipy_new_l() + '',
-                     self.ipy_in(2) + ' foo()',
+            lines = [IPyPrompt.in_prompt(1) + ' def foo():',
+                     IPyPrompt.new_l_prompt() + '     print "hi"',
+                     IPyPrompt.new_l_prompt() + '',
+                     IPyPrompt.in_prompt(2) + ' foo()',
                      'hi',
-                     self.ipy_in(3)]
+                     IPyPrompt.in_prompt(3)]
             self.assertEqual(output[-6:], lines)
 
             # undo
-            tmux.send_command(t, 'undo', prompt=self.ipy_in_formatted(2))
+            tmux.send_command(t, 'undo', prompt=IPyPrompt.in_formatted(2))
             output = tmux.visible_without_formatting(t)
-            self.assertEqual(output[-4:], lines[:3] + [self.ipy_in(2)])
+            self.assertEqual(output[-4:], lines[:3] + [IPyPrompt.in_prompt(2)])
 
             # undo again
-            tmux.send_command(t, 'undo', prompt=self.ipy_new_l_formatted())
+            tmux.send_command(t, 'undo', prompt=IPyPrompt.new_l_formatted())
             output = tmux.visible_without_formatting(t)
-            self.assertEqual(output[-3:], lines[:2] + [self.ipy_new_l()])
+            self.assertEqual(output[-3:], lines[:2] + [IPyPrompt.new_l_prompt()])
 
 
 if __name__ == '__main__':
