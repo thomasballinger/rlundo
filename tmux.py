@@ -25,6 +25,10 @@ def visible(pane):
     return pane.tmux('capture-pane', '-ep').stdout
 
 
+def visible_without_formatting(pane):
+    return pane.tmux('capture-pane', '-p').stdout
+
+
 def visible_after_prompt(pane, expected=u'$', interval=.1, max=1):
     """Return the visible region once expected is found on last line"""
     t0 = time.time()
@@ -148,8 +152,7 @@ class TmuxPane(object):
         return """"""
 
     def bash_config_contents(self):
-        return """export PS1='$'
-    """
+        return """export PS1='$'"""
 
     def tempfile(self, contents):
         tmp = tempfile.NamedTemporaryFile()

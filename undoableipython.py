@@ -6,9 +6,14 @@ undoableipython
 
 This module contains a replacement for the
 TerminalInteractiveShell.raw_input_original method that can be found in
-IPython source code. The replacement implements undoable feature.
+IPython source code. The replacement implements undoable feature for ipython
+without rewriting the terminal (you will see the history of written statements
+but the last statement will be undone).
+
+Use it from the command line: `python undoableipython.py`
 """
 
+from __future__ import unicode_literals
 import os
 import sys
 from IPython.utils import py3compat
@@ -95,7 +100,11 @@ def patch_ipython():
 
 
 def rl_is_ipython(rl_path):
-    """Check if the terminal to be opened is ipython."""
+    """Check if the terminal to be opened is ipython.
+
+    Args:
+        rl_path: Path of interpreter being called.
+    """
     return os.path.basename(rl_path) == "ipython"
 
 
