@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+
+"""
+rlundo
+----------------------------------
+
+Start a repl with undo feature.
+"""
+
+from __future__ import unicode_literals
 import sys
 
 from rlundoable import modify_env_with_modified_rl
