@@ -145,12 +145,12 @@ class TestRewriteHelpers(unittest.TestCase):
                           '>>> '])
 
     def test_count_lines(self):
-        self.assertEqual(rewrite.count_lines("1234\n123456", 4), 2)
-        self.assertEqual(rewrite.count_lines("1234\n123456", 10), 1)
-        self.assertEqual(rewrite.count_lines("> undo\r\n> 1\r\n1\r\n", 10), 3)
+        self.assertEqual(rewrite.count_lines(b"1234\n123456", 4), 2)
+        self.assertEqual(rewrite.count_lines(b"1234\n123456", 10), 1)
+        self.assertEqual(rewrite.count_lines(b"> undo\r\n> 1\r\n1\r\n", 10), 3)
 
         with open("input_with_colours.txt", "r") as f:
-            data = ast.literal_eval('"""'+f.read()+'"""')
+            data = ast.literal_eval('b"""'+f.read()+'"""')
         self.assertEqual(rewrite.count_lines(data, 80), 6)
 
     def test_linesplit(self):
@@ -159,18 +159,18 @@ class TestRewriteHelpers(unittest.TestCase):
         self.assertEqual(rewrite.linesplit(["1234", "123456"], 10),
                          ["1234", "123456"])
 
-    def test_line_len(self):
-        self.assertEqual(rewrite._line_len("1234"), 4)
-        self.assertEqual(rewrite._line_len("1234\n"), 4)
-        self.assertEqual(rewrite._line_len("\x1b[0;32m1234"), 4)
-        self.assertEqual(rewrite._line_len("\x1b[0m1234"), 4)
+    def test_visible_characters(self):
+        self.assertEqual(rewrite._visible_characters("1234"), 4)
+        self.assertEqual(rewrite._visible_characters("1234\n"), 4)
+        self.assertEqual(rewrite._visible_characters("\x1b[0;32m1234"), 4)
+        self.assertEqual(rewrite._visible_characters("\x1b[0m1234"), 4)
 
-    def test_line_resizes(self):
-        self.assertEqual(rewrite._line_resizes("1234", 4), 1)
-        self.assertEqual(rewrite._line_resizes("1234", 3), 2)
-        self.assertEqual(rewrite._line_resizes("1234", 2), 2)
-        self.assertEqual(rewrite._line_resizes("1234", 1), 4)
-        self.assertEqual(rewrite._line_resizes("\x1b[0;32m1234", 2), 2)
+    def test_rows_required(self):
+        self.assertEqual(rewrite._rows_required("1234", 4), 1)
+        self.assertEqual(rewrite._rows_required("1234", 3), 2)
+        self.assertEqual(rewrite._rows_required("1234", 2), 2)
+        self.assertEqual(rewrite._rows_required("1234", 1), 4)
+        self.assertEqual(rewrite._rows_required("\x1b[0;32m1234", 2), 2)
 
 
 class TestRunWithTmux(unittest.TestCase):

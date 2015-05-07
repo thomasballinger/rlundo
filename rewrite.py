@@ -40,24 +40,22 @@ def save():
 
 
 def count_lines(msg, width):
-    """Number of lines msg would move cursor down"""
-    msg = msg.decode(encoding)
-    resized_lines = [_line_resizes(line, width) for line in msg.split('\n')]
+    """Number of lines msg would move cursor down at a terminal width"""
+    resized_lines = [_rows_required(line, width) for line in msg.split('\n')]
     num_lines = sum(resized_lines) - 1
     return num_lines
 
 
-def _line_len(line):
-    """Calculate len of a string without colour escape characters."""
+def _visible_characters(line):
+    """Number of characters in string without color escape characters."""
     line_without_colours = re.sub("\x1b[[]0(;\d\d)?m", "", line)
     line_without_colours = line_without_colours.strip("\n")
     return len(line_without_colours)
 
 
-def _line_resizes(line, width):
-    """Calculate how many lines will need a line to be printed due to terminal
-    resizing."""
-    return max(0, (_line_len(line) - 1) // width) + 1
+def _rows_required(line, width):
+    """Calculate how many rows a line will need to be printed"""
+    return max(0, (_visible_characters(line) - 1) // width) + 1
 
 
 def linesplit(lines, width):
@@ -80,7 +78,7 @@ def restore():
     lines_after_save = outputs.pop() if outputs else ''
     lines = lines_between_saves + lines_after_save
     logger.debug('lines to rewind: %r' % (lines, ))
-    n = count_lines(lines, terminal.width)
+    n = count_lines(lines.decode(encoding), terminal.width)
     logger.debug('numer of lines to rewind %d' % (n, ))
     lines_available, _ = get_cursor_position(sys.stdout, sys.stdin)
     logger.debug('lines move: %d lines_available: %d' % (n, lines_available))
