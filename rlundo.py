@@ -2,7 +2,6 @@
 
 """
 rlundo
-----------------------------------
 
 Start a repl with undo feature.
 """

@@ -2,7 +2,6 @@
 
 """
 test_rlundo
-----------------------------------
 
 Integration test for undo features implemented in rlundo. It sends commands
 to an open tmux terminal using 'undo' and checks that the output is the
