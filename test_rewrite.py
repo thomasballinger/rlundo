@@ -5,11 +5,13 @@ import socket
 import textwrap
 import time
 import unittest
-import nose
+import ast
 
 import terminal_dsl
 import tmux
 import rewrite
+
+import nose
 
 
 def save():
@@ -148,7 +150,7 @@ class TestRewriteHelpers(unittest.TestCase):
         self.assertEqual(rewrite.count_lines("> undo\r\n> 1\r\n1\r\n", 10), 3)
 
         with open("input_with_colours.txt", "r") as f:
-            data = f.read()
+            data = ast.literal_eval('"""'+f.read()+'"""')
         self.assertEqual(rewrite.count_lines(data, 80), 6)
 
     def test_linesplit(self):
