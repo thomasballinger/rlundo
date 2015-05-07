@@ -2,10 +2,8 @@
 
 """
 py_logger
-----------------------------------
 
-Write a log of what's going on in a python terminal to see the actual bytes
-decoded.
+Write a log of what's what bytes are being written by a command
 
 Use it from the command line: `python py_logger.py ipython`
 Use it from another python script:
@@ -16,6 +14,7 @@ Use it from another python script:
 from __future__ import unicode_literals
 import os
 import sys
+
 import pity
 
 log = open('output.log', 'w')
@@ -41,4 +40,8 @@ def run(argv):
                handle_window_size=True)
 
 if __name__ == '__main__':
-    run(sys.argv[1:])
+    if len(sys.argv) == 1:
+        print "To record what bytes ipython writes to stdout/stderr:"
+        print "python py_logger.py ipython"
+    else:
+        run(sys.argv[1:])
