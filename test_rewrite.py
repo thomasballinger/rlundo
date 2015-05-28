@@ -148,6 +148,8 @@ class TestRewriteHelpers(unittest.TestCase):
         self.assertEqual(rewrite.count_lines(b"1234\n123456", 4), 2)
         self.assertEqual(rewrite.count_lines(b"1234\n123456", 10), 1)
         self.assertEqual(rewrite.count_lines(b"> undo\r\n> 1\r\n1\r\n", 10), 3)
+        self.assertEqual(rewrite.count_lines(b"\x01\x1b[0;32m\x02In [\x01\x1b[1;32m\x021\x01\x1b[0;32m\x02]: 1\n\x01\x1b[0m\x02\x1b[0;31mOut[\x1b[1;31m1\x1b[0;31m]: \x1b[0m1\n\n", 40), 3)
+        self.assertEqual(rewrite.count_lines(b'\r\n\x1b[0;32mIn [\x1b[1;32m2\x1b[0;32m]: \x1b[0mundo\x1b[0;32m   ...: \x1b[0m     \r\n\r\n', 40), 3)
 
         with open("input_with_colours.txt", "r") as f:
             data = ast.literal_eval('b"""'+f.read()+'"""')
