@@ -180,7 +180,7 @@ class TestUndoableIpythonWithTmux(unittest.TestCase):
 
     # @unittest.skip("skip")
     def test_undo_multiple_input_lines(self):
-        """Test udoing a line of a multiple lines command in ipython."""
+        """Test undoing a line of a multiple lines command in ipython."""
         with ActualUndo(80, 30) as t:
 
             # type some commands
