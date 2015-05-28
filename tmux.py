@@ -34,7 +34,7 @@ def visible_after_prompt(pane, expected=u'$', interval=.1, max=1):
     t0 = time.time()
     while True:
         if time.time() > t0 + max:
-            raise ValueError("prompt didn't appear within max time: %r" % (screen, ))
+            raise ValueError("prompt %r didn't appear within max time: %r" % (expected, screen))
         screen = visible(pane)
         if screen and screen[-1] == expected:
             return screen
