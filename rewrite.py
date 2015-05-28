@@ -106,8 +106,10 @@ def restore():
     else:
         logger.debug('moving cursor %d lines up for %r' % (n, lines))
         for _ in range(n):
+            import time; time.sleep(1)
             write(terminal.move_up)
-        for _ in range(200):
+        for _ in range(20):
+            import time; time.sleep(.2)
             write(terminal.move_left)
         write(terminal.clear_eos)
 
