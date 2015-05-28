@@ -61,8 +61,11 @@ class ActualUndo(tmux.TmuxPane):
         return """
         export PS1='$'
         alias irb="python rlundo.py /usr/bin/irb"
-        alias ipy="{} rlundo.py ipython"
-        """.format(python_env)
+        alias ipy="{} rlundo.py ipython -i {}"
+        """.format(python_env, self.ipython_startup.name)
+
+    def ipython_config_contents(self):
+        return """%colors linux"""
 
     def __enter__(self):
         """Initialize a pane with an undo scenario.
@@ -74,6 +77,7 @@ class ActualUndo(tmux.TmuxPane):
         ...     print(tmux.visible_after_prompt(t, expected=u'$'))
         [u'$echo hello', u'hello', u'$']
         """
+        self.ipython_startup = self.tempfile(self.ipython_config_contents(), suffix='.ipy')
         return tmux.TmuxPane.__enter__(self)
 
 
@@ -87,27 +91,26 @@ class IPyPrompt(object):
         normal ipython does, the proper ipython line for prompt is included as
         a comment below."""
         # return u'\x1b[34mIn [\x1b[1m{}\x1b[0;34m]:'.format(num)
-        return u'\x1b[34mIn [\x1b[1m{}\x1b[0m]:'.format(num)
+        return u'\x1b[32mIn [\x1b[1m{}\x1b[0m]:'.format(num)
 
     @classmethod
     def out_formatted(cls, num):
-        """Build ipython "Out" prompt with formatting.
+        """Build ipython "Out" prompt with formatting."""
 
-        For some reason tmux doesn't deal with formatting in the same way that
-        normal ipython does, the proper ipython line for prompt is included as
-        a comment below."""
+        # For some reason tmux doesn't deal with formatting in the same way that
+        # normal ipython does, the proper ipython line for prompt is included as
+        # a comment below.
         # return u'\x1b[31mOut[\x1b[1m{}\x1b[0;34m]:'.format(num)
         return u'\x1b[31mOut[\x1b[1m{}\x1b[0m]:'.format(num)
 
     @classmethod
     def new_l_formatted(cls):
-        """Build ipython new line in the same "In" prompt with formatting.
-
-        For some reason tmux doesn't deal with formatting in the same way that
-        normal ipython does, the proper ipython line for prompt is included as
-        a comment below."""
+        """Build ipython new line in the same "In" prompt with formatting."""
+        # For some reason tmux doesn't deal with formatting in the same way that
+        # normal ipython does, the proper ipython line for prompt is included as
+        # a comment below."""
         # return u'\x1b[34m   ...: \x1b[0m'
-        return u'\x1b[34m   ...: \x1b[39m'
+        return u'\x1b[32m   ...: \x1b[39m'
 
     @classmethod
     def in_prompt(cls, num):

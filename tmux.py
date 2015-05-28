@@ -154,8 +154,8 @@ class TmuxPane(object):
     def bash_config_contents(self):
         return """export PS1='$'"""
 
-    def tempfile(self, contents):
-        tmp = tempfile.NamedTemporaryFile()
+    def tempfile(self, contents, suffix=''):
+        tmp = tempfile.NamedTemporaryFile(suffix=suffix)
         self.tempfiles_to_close.append(tmp)
         if py2:
             tmp.write(contents)
