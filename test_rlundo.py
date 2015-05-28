@@ -192,6 +192,7 @@ class TestUndoableIpythonWithTmux(unittest.TestCase):
             tmux.send_command(t, ' ', prompt=IPyPrompt.in_formatted(2))
             tmux.send_command(t, 'foo()', prompt=IPyPrompt.in_formatted(3))
             output = tmux.visible_without_formatting(t)
+            print output
             lines = [IPyPrompt.in_prompt(1) + ' def foo():',
                      IPyPrompt.new_l_prompt() + '     print "hi"',
                      IPyPrompt.new_l_prompt() + '',
@@ -203,11 +204,13 @@ class TestUndoableIpythonWithTmux(unittest.TestCase):
             # undo
             tmux.send_command(t, 'undo', prompt=IPyPrompt.in_formatted(2))
             output = tmux.visible_without_formatting(t)
+            print output
             self.assertEqual(output[-4:], lines[:3] + [IPyPrompt.in_prompt(2)])
 
             # undo again
             tmux.send_command(t, 'undo', prompt=IPyPrompt.new_l_formatted())
             output = tmux.visible_without_formatting(t)
+            print output
             self.assertEqual(output[-3:], lines[:2] + [IPyPrompt.new_l_prompt()])
 
 
