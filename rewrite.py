@@ -101,7 +101,7 @@ def restore():
         middle = terminal.height // 2
 
         for line in history(''.join(outputs))[:-1][-middle:]:
-            write(line + '\n\r')
+            write(line + '\r\n')
 
     else:
         logger.debug('moving cursor %d lines up for %r' % (n, lines))
