@@ -16,7 +16,7 @@ import locale
 import re
 
 import blessings
-import pity
+import pexpect
 from findcursor import get_cursor_position
 
 # version 1: record sequences, guess how many lines to go back up
@@ -139,9 +139,16 @@ def master_read(fd):
 
 
 def run(argv):
-    pity.spawn(argv,
-               master_read=master_read,
-               handle_window_size=True)
+    child = pexpect.spawn(argv[0], argv[1:], logfile=LogFile())
+                       #master_read=master_read,
+                       #handle_window_size=True)
+    child.interact()
+
+class LogFile(object):
+    def write(self, data):
+        outputs[-1] += data
+    def flush(self):
+        pass
 
 
 def run_with_listeners(args):
