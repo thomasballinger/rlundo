@@ -16,6 +16,7 @@ Use it from the command line: `python undoableipython.py`
 from __future__ import unicode_literals
 import os
 import sys
+import time
 from IPython.utils import py3compat
 from IPython.terminal.interactiveshell import TerminalInteractiveShell
 from IPython import start_ipython
@@ -69,6 +70,7 @@ def raw_input_original(prompt):
             line = "undo"
 
         if line == "undo":
+            time.sleep(.001) # race condition, see issue #29
             restore()
             os._exit(42)
 

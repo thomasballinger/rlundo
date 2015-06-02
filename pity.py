@@ -8,7 +8,7 @@ import sys
 import termios
 import tty
 import logging
-logging.basicConfig(filename='debug.log', level=logging.DEBUG)
+logging.basicConfig(filename='debug.log', level=logging.INFO)
 from termhelpers import Nonblocking
 
 CHILD = pty.CHILD

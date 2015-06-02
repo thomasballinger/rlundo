@@ -7,13 +7,13 @@ Opening a connection to localhost:4243 will restore the state as it
 was two saved states ago.
 """
 
+import locale
+import logging
 import os
+import re
 import socket
 import sys
 import threading
-import logging
-import locale
-import re
 
 import blessings
 import pity
@@ -26,7 +26,7 @@ encoding = locale.getdefaultlocale()[1]
 outputs = [b'']
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename='example.log', level=logging.DEBUG)
+logging.basicConfig(filename='example.log', level=logging.INFO)
 
 
 def write(data):
@@ -77,9 +77,9 @@ def restore():
     lines_between_saves = outputs.pop() if outputs else ''
     lines_after_save = outputs.pop() if outputs else ''
     lines = lines_between_saves + lines_after_save
-    logger.debug('lines to rewind: %r' % (lines, ))
+    logger.info('lines to rewind: %r' % (lines, ))
     n = count_lines(lines.decode(encoding), terminal.width)
-    logger.debug('numer of lines to rewind %d' % (n, ))
+    logger.info('numer of lines to rewind %d' % (n, ))
     lines_available, _ = get_cursor_position(sys.stdout, sys.stdin)
     logger.debug('lines move: %d lines_available: %d' % (n, lines_available))
     if n > lines_available:
@@ -131,6 +131,7 @@ def set_up_listener(handler, port):
 
 def master_read(fd):
     data = os.read(fd, 1024)
+    logger.info('read data: %r' % data)
     if outputs:
         outputs[-1] += data
     return data
