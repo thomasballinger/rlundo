@@ -207,6 +207,8 @@ class TestUndoableIpythonWithTmux(unittest.TestCase):
 
             # undo again
             tmux.send_command(t, 'undo', prompt=IPyPrompt.new_l_formatted())
+            import time
+            time.sleep(1)
             output = tmux.visible_without_formatting(t)
             self.assertEqual(output[-3:], lines[:2] + [IPyPrompt.new_l_prompt()])
 
