@@ -138,7 +138,7 @@ class TestUndoableIpythonWithTmux(unittest.TestCase):
     def test_simple(self):
         """Test sending commands and reading formatted output with tmux."""
         with ActualUndo(80, 30) as t:
-            tmux.send_command(t, 'ipy', prompt=IPyPrompt.in_formatted(1))
+            tmux.send_command(t, 'ipy', prompt=IPyPrompt.in_formatted(1), maxtime=4)
             tmux.send_command(t, 'a = 1', prompt=IPyPrompt.in_formatted(2))
             tmux.send_command(t, 'a', prompt=IPyPrompt.in_formatted(3))
             tmux.send_command(t, 'def foo():',
@@ -162,7 +162,7 @@ class TestUndoableIpythonWithTmux(unittest.TestCase):
         with ActualUndo(80, 30) as t:
 
             # type some commands
-            tmux.send_command(t, 'ipy', prompt=IPyPrompt.in_formatted(1))
+            tmux.send_command(t, 'ipy', prompt=IPyPrompt.in_formatted(1), maxtime=4)
             tmux.send_command(t, 'a = 1', prompt=IPyPrompt.in_formatted(2))
             tmux.send_command(t, 'a', prompt=IPyPrompt.in_formatted(3))
             output = tmux.visible_without_formatting(t)
@@ -184,7 +184,7 @@ class TestUndoableIpythonWithTmux(unittest.TestCase):
         with ActualUndo(80, 30) as t:
 
             # type some commands
-            tmux.send_command(t, 'ipy', prompt=IPyPrompt.in_formatted(1))
+            tmux.send_command(t, 'ipy', prompt=IPyPrompt.in_formatted(1), maxtime=4)
             tmux.send_command(t, 'def foo():',
                               prompt=IPyPrompt.new_l_formatted())
             tmux.send_command(t, 'print "hi"',
