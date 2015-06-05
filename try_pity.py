@@ -18,7 +18,7 @@ def interactive():
     pity.spawn(['python', '-c', 'while True: raw_input()'],
                master_read=master_read,
                handle_window_size=True)
-    print outputs
+    print(outputs)
 
 
 if __name__ == '__main__':

@@ -177,17 +177,21 @@ class TmuxPane(object):
         self.server.cmd('set', '-u', 'automatic-rename-format')
 
         self.window = self.session.new_window(attach=False)
-        self.window.cmd('respawn-pane', '-k', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
-        (pane, ) = self.window.panes
-        self.window.cmd('respawn-pane', '-k', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
-        pane.cmd('split-window', '-h', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
-        pane.cmd('split-window', '-v', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
-        if self.width is not None:
-            pane.set_width(self.width)
-        if self.height is not None:
-            pane.set_height(self.height)
-        wait_for_prompt(pane)
-        return pane
+        try:
+            self.window.cmd('respawn-pane', '-k', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
+            (pane, ) = self.window.panes
+            self.window.cmd('respawn-pane', '-k', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
+            pane.cmd('split-window', '-h', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
+            pane.cmd('split-window', '-v', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
+            if self.width is not None:
+                pane.set_width(self.width)
+            if self.height is not None:
+                pane.set_height(self.height)
+            wait_for_prompt(pane)
+            return pane
+        except:
+            self.window.kill_window()
+            raise
 
     def __exit__(self, type, value, tb):
         for file in self.tempfiles_to_close:
