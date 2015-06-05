@@ -41,7 +41,7 @@ def run(argv):
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
-        print "To record what bytes ipython writes to stdout/stderr:"
-        print "python py_logger.py ipython"
+        print("To record what bytes ipython writes to stdout/stderr:")
+        print("python py_logger.py ipython")
     else:
         run(sys.argv[1:])

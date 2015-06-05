@@ -42,7 +42,7 @@ def generate_memory_stats(interval=0.1, count=None):
                 yield unicode(line.split()[0])
 
     except KeyboardInterrupt:
-        print "\nMemory usage monitor exited!\n"
+        print("\nMemory usage monitor exited!\n")
 
 
 def graph_memory_usage():
@@ -74,7 +74,7 @@ def graph_memory_usage():
             fig.canvas.draw()
 
     except KeyboardInterrupt:
-        print "Memory graph exited"
+        print("Memory graph exited")
 
 
 if __name__ == '__main__':
