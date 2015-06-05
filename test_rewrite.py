@@ -194,7 +194,7 @@ class TestRunWithTmux(unittest.TestCase):
     def test_running_rewrite(self):
         with tmux.TmuxPane(40, 10) as t:
             t.send_keys('python rewrite.py')
-            self.assertEqual(tmux.visible_after_prompt(t, '>'),
+            self.assertEqual(tmux.visible_after_prompt(t, '>', max=4),
                              ['$ python rewrite.py', '>'])
 
     def test_simple_save_and_restore(self):
