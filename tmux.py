@@ -9,11 +9,11 @@ py2 = sys.version_info.major == 2
 
 
 def all_contents(pane):
-    return pane.tmux('capture-pane', '-epS', '-10000').stdout
+    return pane.cmd('capture-pane', '-epS', '-10000').stdout
 
 
 def all_lines(pane):
-    return pane.tmux('capture-pane', '-epJS', '-10000').stdout
+    return pane.cmd('capture-pane', '-epJS', '-10000').stdout
 
 
 def scrollback(pane):
@@ -22,11 +22,11 @@ def scrollback(pane):
 
 
 def visible(pane):
-    return pane.tmux('capture-pane', '-ep').stdout
+    return pane.cmd('capture-pane', '-ep').stdout
 
 
 def visible_without_formatting(pane):
-    return pane.tmux('capture-pane', '-p').stdout
+    return pane.cmd('capture-pane', '-p').stdout
 
 
 def visible_after_prompt(pane, expected=u'$', interval=.1, max=1):
@@ -64,19 +64,19 @@ def wait_for_condition(pane, final, query, condition=lambda x, y: x == y,
 
 def cursor_pos(pane):
     """Returns zero-indexed cursor position"""
-    process = pane.tmux('list-panes', '-F', '#{pane_height} #{pane_width} #{cursor_x} #{cursor_y}')
+    process = pane.cmd('list-panes', '-F', '#{pane_height} #{pane_width} #{cursor_x} #{cursor_y}')
     height, width, x, y = [int(x) for x in process.stdout[0].split()]
     return y, x
 
 
 def width(pane):
-    process = pane.tmux('list-panes', '-F', '#{pane_height} #{pane_width} #{cursor_x} #{cursor_y}')
+    process = pane.cmd('list-panes', '-F', '#{pane_height} #{pane_width} #{cursor_x} #{cursor_y}')
     height, width, x, y = [int(x) for x in process.stdout[0].split()]
     return width
 
 
 def height(pane):
-    process = pane.tmux('list-panes', '-F', '#{pane_height} #{pane_width} #{cursor_x} #{cursor_y}')
+    process = pane.cmd('list-panes', '-F', '#{pane_height} #{pane_width} #{cursor_x} #{cursor_y}')
     height, width, x, y = [int(x) for x in process.stdout[0].split()]
     return height
 
@@ -90,10 +90,10 @@ def stepwise_resize_width(pane, final_width):
     initial = width(pane)
     if initial < final_width:
         for _ in range(final_width - initial):
-            pane.tmux('resize-pane', '-R', str(1))
+            pane.cmd('resize-pane', '-R', str(1))
     elif initial > final_width:
         for _ in range(initial - final_width):
-            pane.tmux('resize-pane', '-L', str(1))
+            pane.cmd('resize-pane', '-L', str(1))
     else:
         return
     wait_for_width(pane, final_width)
@@ -104,10 +104,10 @@ def stepwise_resize_height(pane, final_height):
     initial = height(pane)
     if initial < final_height:
         for _ in range(final_height - initial):
-            pane.tmux('resize-pane', '-D', str(1))
+            pane.cmd('resize-pane', '-D', str(1))
     elif initial > final_height:
         for _ in range(initial - final_height):
-            pane.tmux('resize-pane', '-U', str(1))
+            pane.cmd('resize-pane', '-U', str(1))
     else:
         return
     wait_for_height(pane, final_height)
@@ -115,7 +115,7 @@ def stepwise_resize_height(pane, final_height):
 
 def window_name(pane):
     """Returns zero-indexed cursor position"""
-    process = pane.tmux('list-panes', '-F', '#{window_name}')
+    process = pane.cmd('list-panes', '-F', '#{window_name}')
     (name, ) = process.stdout[0].split()
     return name
 
@@ -135,7 +135,7 @@ def send_command(pane, cmd, enter=True, prompt=u'$', maxtime=2):
     if not isinstance(enter, bool):
         raise ValueError("enter should be a bool, got %r" % (enter, ))
     row, col = cursor_pos(pane)
-    pane.tmux('send-keys', cmd)
+    pane.cmd('send-keys', cmd)
     wait_until_cursor_moves(pane, row, col)
     if enter:
         pane.enter()
@@ -173,15 +173,15 @@ class TmuxPane(object):
             self.session = self.server.sessions[0]
         except tmuxp.exc.TmuxpException:
             self.session = self.server.new_session()
-        self.server.tmux('set', 'automatic-rename', 'on')
-        self.server.tmux('set', '-u', 'automatic-rename-format')
+        self.server.cmd('set', 'automatic-rename', 'on')
+        self.server.cmd('set', '-u', 'automatic-rename-format')
 
         self.window = self.session.new_window(attach=False)
-        self.window.tmux('respawn-pane', '-k', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
+        self.window.cmd('respawn-pane', '-k', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
         (pane, ) = self.window.panes
-        self.window.tmux('respawn-pane', '-k', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
-        pane.tmux('split-window', '-h', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
-        pane.tmux('split-window', '-v', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
+        self.window.cmd('respawn-pane', '-k', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
+        pane.cmd('split-window', '-h', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
+        pane.cmd('split-window', '-v', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
         if self.width is not None:
             pane.set_width(self.width)
         if self.height is not None:

@@ -25,7 +25,7 @@ def restore(t):
     s = socket.socket()
     s.connect(('localhost', 4243))
     assert b'' == s.recv(100)
-    t.tmux('send-keys', '>')
+    t.cmd('send-keys', '>')
     time.sleep(.1)
 
 
@@ -495,23 +495,23 @@ class UndoScenario(tmux.TmuxPane):
         save()
         first_line = lines.pop(0)
         assert first_line.startswith('>')
-        pane.tmux('send-keys', first_line[1:])
+        pane.cmd('send-keys', first_line[1:])
         pane.enter()
         tmux.wait_until_cursor_moves(pane, 1, 1)
         for i, line in enumerate(lines):
             if i == termstate.cursor_line:
                 assert len(lines) == i - 1
-                pane.tmux('send-keys', line)
+                pane.cmd('send-keys', line)
             elif line.startswith('>'):
                 tmux.send_command(pane, '>', enter=False, prompt=u'>')
                 save()
-                pane.tmux('send-keys', line[1:])
+                pane.cmd('send-keys', line[1:])
                 if i != len(lines) - 1:
                     pane.enter()
             else:
                 if line != '':
                     row, col = tmux.cursor_pos(pane)
-                    pane.tmux('send-keys', line)
+                    pane.cmd('send-keys', line)
                     tmux.wait_until_cursor_moves(pane, row, col)
                 if i != len(lines) - 1:
                     pane.enter()
@@ -523,15 +523,15 @@ class UndoScenario(tmux.TmuxPane):
         assert additional_required_blank_rows >= 0
         assert col == len(line) % termstate.width  # TODO allow other columns
         if additional_required_blank_rows == 1:
-            pane.tmux('1c'+str(col))
+            pane.cmd('1c'+str(col))
             pane.enter()
         elif additional_required_blank_rows > 1:
             for _ in range(additional_required_blank_rows - 1):
                 pane.enter()
             for _ in range(additional_required_blank_rows - 2):
-                pane.tmux('send-keys', 'up2')
+                pane.cmd('send-keys', 'up2')
                 pane.enter()
-            pane.tmux('send-keys', 'uc'+str(col))
+            pane.cmd('send-keys', 'uc'+str(col))
             pane.enter()
 
 
