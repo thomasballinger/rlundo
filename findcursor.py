@@ -50,7 +50,7 @@ def _inner_get_cursor_position(to_terminal, from_terminal):
                                      " return ''. Returned %r so far", (resp,))
                 return c
             except IOError:
-                raise ValueError('cursor get pos response read interrupted')
+                raise ValueError('cursor get pos response read interrupted: %r' % (resp, ))
 
     resp = ''
     while True:

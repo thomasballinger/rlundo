@@ -17,8 +17,6 @@ import sys
 
 import pity
 
-log = open('output.log', 'w')
-
 
 def master_read(fd):
     """Read the output of a terminal writing a log in the middle.
@@ -26,6 +24,7 @@ def master_read(fd):
         fd: File descriptor being read.
     """
     data = os.read(fd, 1024)
+    log = open('output.log', 'a')
     log.write(data)
     return data
 
