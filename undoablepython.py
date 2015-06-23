@@ -5,7 +5,6 @@ import logging
 import os
 import socket
 import sys
-import time
 from functools import partial
 
 # read about copy-on-write for Python processes - I feel like I've heard
@@ -60,7 +59,6 @@ def readline(prompt):
         except KeyboardInterrupt:
             s = 'undo'
         if s == 'undo':
-            time.sleep(.001) # race condition, see issue #29
             restore()
             readline.on_undo()
         read_fd, write_fd = os.pipe()
