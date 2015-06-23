@@ -55,8 +55,9 @@ to restore previous terminal states
 
 ##Running the tests
 
-* nosetests
-* you're need to install a recent version of tmux, 1.9a seems to work
+* clone the repo, create a virtual environment
+* pip install nose
+* somehow install a recent version of tmux, 1.9a seems to work (on OSX brew 
 
 
 ---
