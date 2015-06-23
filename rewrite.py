@@ -24,10 +24,11 @@ terminal = blessings.Terminal()
 encoding = locale.getdefaultlocale()[1]
 
 outputs = [b'']
+terminal_output_lock = pity.TerminalLock()
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='example.log', level=logging.INFO)
-
 
 def write(data):
     sys.stdout.write(data)
@@ -73,6 +74,10 @@ HISTORY_BROKEN_MSG = '#<---History contiguity broken by rewind--->'
 
 
 def restore():
+    with terminal_output_lock:
+        _restore()
+
+def _restore():
     logger.debug('full output stack: %r' % (outputs, ))
     lines_between_saves = outputs.pop() if outputs else ''
     lines_after_save = outputs.pop() if outputs else ''
@@ -140,7 +145,8 @@ def master_read(fd):
 def run(argv):
     pity.spawn(argv,
                master_read=master_read,
-               handle_window_size=True)
+               handle_window_size=True,
+               terminal_output_lock=terminal_output_lock)
 
 
 def run_with_listeners(args):
