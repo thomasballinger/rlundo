@@ -20,21 +20,18 @@ logger = logging.getLogger(__name__)
 
 DEBUG = False
 
-print('running with pid %r' % (os.getpid(),))
-
-
-def connect_and_wait_for_close(port):
-    s = socket.socket()
+def connect_and_wait_for_close(addr):
+    s = socket.socket(family=socket.AF_UNIX)
     try:
-        s.connect(('localhost', port))
+        s.connect(addr)
     except ConnectionRefusedError:
         pass
     else:
         assert b'' == s.recv(1024)
 
 
-save = partial(connect_and_wait_for_close, port=4242)
-restore = partial(connect_and_wait_for_close, port=4243)
+save = None
+restore = None
 
 
 def log(msg):
@@ -120,7 +117,17 @@ def rl_is_python(rl_path):
 
 
 def start_undoable_python(args=None):
+    print('running with pid %r' % (os.getpid(),))
     console = ForkUndoConsole()
+    global save
+    global restore
+    try:
+        save = partial(connect_and_wait_for_close, addr=os.environ['RLUNDO_SAVE'])
+        restore = partial(connect_and_wait_for_close, addr=os.environ['RLUNDO_RESTORE'])
+    except KeyError:
+        print sorted(os.environ.keys())
+        raise
+
 
     if args:
         sys.argv = args

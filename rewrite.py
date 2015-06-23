@@ -7,15 +7,19 @@ Opening a connection to localhost:4243 will restore the state as it
 was two saved states ago.
 """
 
+import argparse
 import locale
 import logging
 import os
 import re
 import socket
 import sys
+import tempfile
 import threading
+import time
 
 import blessings
+
 import pity
 from findcursor import get_cursor_position
 
@@ -25,10 +29,20 @@ encoding = locale.getdefaultlocale()[1]
 
 outputs = [b'']
 terminal_output_lock = pity.TerminalLock()
+stdin_lock = threading.Lock()
 
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='example.log', level=logging.INFO)
+
+
+def temp_name(s):
+    name = os.path.join(tempfile.gettempdir(), str(os.getpid()) + s)
+    if os.path.exists(name):
+        os.remove(name)
+    if ' ' in name:
+        raise ValueError('Things will fall apart if temp files have spaces in them: %r' % name)
+    return name
 
 def write(data):
     sys.stdout.write(data)
@@ -36,8 +50,12 @@ def write(data):
 
 
 def save():
+    time.sleep(.001)
+    # correct way to do this would be to
+    # wait until there's nothing to read on the pty
+
     outputs.append(b'')
-    logger.debug('full output stack: %r' % (outputs, ))
+    logger.info('full output stack: %r' % (outputs, ))
 
 
 def count_lines(msg, width):
@@ -85,7 +103,8 @@ def _restore():
     logger.info('lines to rewind: %r' % (lines, ))
     n = count_lines(lines.decode(encoding), terminal.width)
     logger.info('numer of lines to rewind %d' % (n, ))
-    lines_available, _ = get_cursor_position(sys.stdout, sys.stdin)
+    with stdin_lock:
+        lines_available, _ = get_cursor_position(sys.stdout, sys.stdin)
     logger.debug('lines move: %d lines_available: %d' % (n, lines_available))
     if n > lines_available:
         for _ in range(200):
@@ -117,16 +136,16 @@ def _restore():
         write(terminal.clear_eos)
 
 
-def set_up_listener(handler, port):
+def set_up_listener(handler, addr):
     def forever():
         while True:
             conn, addr = sock.accept()
             handler()
             conn.close()
 
-    sock = socket.socket()
+    sock = socket.socket(family=socket.AF_UNIX)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind(('localhost', port))
+    sock.bind(addr)
     sock.listen(1)
     t = threading.Thread(target=forever)
     t.daemon = True
@@ -142,18 +161,39 @@ def master_read(fd):
     return data
 
 
+def stdin_read(fd):
+    with stdin_lock:
+        data = os.read(fd, 1024)
+        logger.info('read from stdin: %r' % data)
+        return data
+
+
 def run(argv):
     pity.spawn(argv,
                master_read=master_read,
+               stdin_read=stdin_read,
                handle_window_size=True,
                terminal_output_lock=terminal_output_lock)
 
 
-def run_with_listeners(args):
-    listeners = [set_up_listener(save, 4242), set_up_listener(restore, 4243)]
+def run_with_listeners(args, save_addr=None, restore_addr=None):
+    if save_addr is None:
+        save_addr = temp_name('save')
+    if restore_addr is None:
+        restore_addr = temp_name('restore')
+    listeners = [set_up_listener(save, save_addr),
+                 set_up_listener(restore, restore_addr)]
+    os.environ["RLUNDO_SAVE"] = save_addr
+    os.environ["RLUNDO_RESTORE"] = restore_addr
     run(args)
 
 
 if __name__ == '__main__':
-    run_with_listeners(sys.argv[1:] if sys.argv[1:] else [
-                       'python', '-c', "while True: raw_input('>')"])
+    parser = argparse.ArgumentParser(description="Run a command in a pty, saving and restoring the terminal state")
+    parser.add_argument('--save-addr', action='store', default=None)
+    parser.add_argument('--restore-addr', action='store', default=None)
+    parser.add_argument('command', nargs='*')
+    args = parser.parse_args()
+    if args.command == []:
+        args.command = ['python', '-c', "while True: raw_input('>')"]
+    run_with_listeners(args.command, save_addr=args.save_addr, restore_addr=args.restore_addr)
