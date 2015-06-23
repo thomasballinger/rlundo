@@ -1,11 +1,12 @@
 from __future__ import unicode_literals
 
+import ast
+import os
 import re
 import socket
 import textwrap
 import time
 import unittest
-import ast
 
 import terminal_dsl
 import tmux
@@ -15,15 +16,15 @@ import nose
 
 
 def save():
-    s = socket.socket()
-    s.connect(('localhost', 4242))
+    s = socket.socket(family=socket.AF_UNIX)
+    s.connect(os.environ['RLUNDO_SAVE'])
     assert b'' == s.recv(100)
 
 
 def restore(t):
     """Pretend to be the program we're undoing and print prompt"""
-    s = socket.socket()
-    s.connect(('localhost', 4243))
+    s = socket.socket(family=socket.AF_UNIX)
+    s.connect(os.environ['RLUNDO_RESTORE'])
     assert b'' == s.recv(100)
     t.cmd('send-keys', '>')
     time.sleep(.1)
@@ -175,6 +176,19 @@ class TestRewriteHelpers(unittest.TestCase):
         self.assertEqual(rewrite._rows_required("\x1b[0;32m1234", 2), 2)
 
 
+class TmuxPaneWithAddrsInEnv(tmux.TmuxPane):
+    def bash_config_contents(self):
+        self.save_addr = rewrite.temp_name('save')
+        self.restore_addr = rewrite.temp_name('restore')
+        os.environ['RLUNDO_SAVE'] = self.save_addr
+        os.environ['RLUNDO_RESTORE'] = self.restore_addr
+        return """
+        export PS1='$'
+        export SAVE={}
+        export RESTORE={}
+        """.format(self.save_addr, self.restore_addr)
+
+
 class TestRunWithTmux(unittest.TestCase):
     def test_cursor_query(self):
         with tmux.TmuxPane(40, 10) as t:
@@ -198,32 +212,32 @@ class TestRunWithTmux(unittest.TestCase):
                              ['$ python rewrite.py', '>'])
 
     def test_simple_save_and_restore(self):
-        with tmux.TmuxPane(40, 10) as t:
-            tmux.send_command(t, 'python rewrite.py', prompt=u'>')
-            self.assertEqual(tmux.visible(t), ['$python rewrite.py', '>'])
+        with TmuxPaneWithAddrsInEnv(80, 10) as t:
+            tmux.send_command(t, 'python rewrite.py --save-addr $SAVE --restore-addr $RESTORE', prompt=u'>')
+            self.assertEqual(tmux.visible(t), ['$python rewrite.py --save-addr $SAVE --restore-addr $RESTORE', '>'])
             self.assertEqual(tmux.cursor_pos(t), (1, 1))
             save()
 
             tmux.send_command(t, 'hello!', prompt=u'>')
             self.assertEqual(tmux.visible(t),
-                             ['$python rewrite.py', '>hello!', '>'])
+                             ['$python rewrite.py --save-addr $SAVE --restore-addr $RESTORE', '>hello!', '>'])
             restore(t)
 
             self.assertEqual(tmux.visible_after_prompt(t, '>'),
-                             ['$python rewrite.py', '>'])
+                             ['$python rewrite.py --save-addr $SAVE --restore-addr $RESTORE', '>'])
             self.assertEqual(tmux.cursor_pos(t), (1, 1))
 
     def test_scroll_down(self):
-        with tmux.TmuxPane(40, 8) as t:
+        with TmuxPaneWithAddrsInEnv(70, 8) as t:
             tmux.send_command(t, 'true')
             tmux.send_command(t, 'true')
             tmux.send_command(t, 'true')
             tmux.send_command(t, 'true')
             tmux.send_command(t, 'true')
-            tmux.send_command(t, 'python rewrite.py', prompt=u'>')
+            tmux.send_command(t, 'python rewrite.py --save-addr $SAVE --restore-addr $RESTORE', prompt=u'>')
             self.assertEqual(tmux.visible(t),
                              (['$true']*5 +
-                              ['$python rewrite.py',
+                              ['$python rewrite.py --save-addr $SAVE --restore-addr $RESTORE',
                                '>']))
             self.assertEqual(tmux.cursor_pos(t), (6, 1))
             save()
@@ -233,24 +247,24 @@ class TestRunWithTmux(unittest.TestCase):
             tmux.send_command(t, 'hi again!', prompt=u'>')
             save()
             self.assertEqual(tmux.visible(t),
-                             ['$true']*4 + ['$python rewrite.py',
+                             ['$true']*4 + ['$python rewrite.py --save-addr $SAVE --restore-addr $RESTORE',
                                             '>hello!',
                                             '>hi again!',
                                             '>'])
             restore(t)
 
             self.assertEqual(tmux.visible_after_prompt(t, '>'),
-                             ['$true']*4 + ['$python rewrite.py',
+                             ['$true']*4 + ['$python rewrite.py --save-addr $SAVE --restore-addr $RESTORE',
                                             '>hello!',
                                             '>'])
             self.assertEqual(tmux.cursor_pos(t), (6, 1))
 
     def test_scroll_off(self):
         """Scroll down causing recorded output to scroll off the top."""
-        with tmux.TmuxPane(40, 3) as t:
-            tmux.send_command(t, 'python rewrite.py', prompt=u'>')
+        with TmuxPaneWithAddrsInEnv(60, 3) as t:
+            tmux.send_command(t, 'python rewrite.py --save-addr $SAVE --restore-addr $RESTORE', prompt=u'>')
             save()
-            self.assertEqual(tmux.visible(t), ['$python rewrite.py', '>'])
+            self.assertEqual(tmux.visible(t), ['$python rewrite.py --save-addr $SAVE --restore-addr $RESTORE', '>'])
             self.assertEqual(tmux.cursor_pos(t), (1, 1))
 
             tmux.send_command(t, 'hello!', prompt=u'>')
@@ -273,10 +287,10 @@ class TestRunWithTmux(unittest.TestCase):
         or cursor position to know that we've run out of space.
         I think we don't need an emulator yet - just cursor querying should do.
         """
-        with tmux.TmuxPane(60, 3) as t:
-            tmux.send_command(t, 'python rewrite.py', prompt=u'>')
+        with TmuxPaneWithAddrsInEnv(60, 3) as t:
+            tmux.send_command(t, 'python rewrite.py --save-addr $SAVE --restore-addr $RESTORE', prompt=u'>')
             save()
-            self.assertEqual(tmux.visible(t), ['$python rewrite.py', '>'])
+            self.assertEqual(tmux.visible(t), ['$python rewrite.py --save-addr $SAVE --restore-addr $RESTORE', '>'])
             self.assertEqual(tmux.cursor_pos(t), (1, 1))
 
             tmux.send_command(t, 'hi there!', prompt=u'>')
@@ -287,7 +301,7 @@ class TestRunWithTmux(unittest.TestCase):
             tmux.send_command(t, 'hey!', prompt=u'>')
             save()
             self.assertEqual(tmux.scrollback(t),
-                             ['$python rewrite.py',
+                             ['$python rewrite.py --save-addr $SAVE --restore-addr $RESTORE',
                               '>hi there!',
                               '>hello!'])
             self.assertEqual(tmux.visible(t),
@@ -296,7 +310,7 @@ class TestRunWithTmux(unittest.TestCase):
                               '>'])
             restore(t)
             self.assertEqual(tmux.scrollback(t),
-                             ['$python rewrite.py',
+                             ['$python rewrite.py --save-addr $SAVE --restore-addr $RESTORE',
                               '>hi there!',
                               '>hello!',
                               '#<---History contiguity broken by rewind--->'])
@@ -379,10 +393,14 @@ class UndoScenario(tmux.TmuxPane):
     Final line must have a cursor on it.
     """
     def bash_config_contents(self):
+        save_addr = rewrite.temp_name('save')
+        restore_addr = rewrite.temp_name('restore')
+        os.environ['RLUNDO_SAVE'] = save_addr
+        os.environ['RLUNDO_RESTORE'] = restore_addr
         return """
         export PS1='$'
-        alias rw="python rewrite.py python %s"
-        """ % (self.python_script.name, )
+        alias rw="python rewrite.py --save-addr %s --restore-addr %s python %s"
+        """ % (save_addr, restore_addr, self.python_script.name)
 
     def python_script_contents(self):
         # TODO: Move this out to its own file, import command aliases
@@ -462,12 +480,6 @@ class UndoScenario(tmux.TmuxPane):
         if not termstate.cursor_line == len(termstate.lines) - 1:
             raise ValueError("cursor not on last line!")
 
-    def check_port(self, port):
-        s = socket.socket()
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.bind(('localhost', port))
-        s.close()
-
     def __enter__(self):
         """Initialize a pane with an undo scenario.
 
@@ -481,8 +493,6 @@ class UndoScenario(tmux.TmuxPane):
         ...     print(tmux.visible_after_prompt(t, expected=u'>'))
         [u'$rw', u'>a', u'b', u'c', u'>d', u'e', u'>']
         """
-        self.check_port(4242)
-        self.check_port(4243)
         self.python_script = self.tempfile(self.python_script_contents())
         return tmux.TmuxPane.__enter__(self)
 

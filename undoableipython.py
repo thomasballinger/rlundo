@@ -41,17 +41,17 @@ def raw_input_original(prompt):
     if sys.version_info.major == 2:
         ConnectionRefusedError = socket.error
 
-    def connect_and_wait_for_close(port):
-        s = socket.socket()
+    def connect_and_wait_for_close(addr):
+        s = socket.socket(family=socket.AF_UNIX)
         try:
-            s.connect(('localhost', port))
+            s.connect(addr)
         except ConnectionRefusedError:
             pass
         else:
             assert b'' == s.recv(1024)
 
-    save = partial(connect_and_wait_for_close, port=4242)
-    restore = partial(connect_and_wait_for_close, port=4243)
+    save = partial(connect_and_wait_for_close, addr=os.environ['RLUNDO_SAVE'])
+    restore = partial(connect_and_wait_for_close, addr=os.environ['RLUNDO_RESTORE'])
 
     while True:
         save()

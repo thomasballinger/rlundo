@@ -7,6 +7,7 @@ Opening a connection to localhost:4243 will restore the state as it
 was two saved states ago.
 """
 
+import argparse
 import locale
 import logging
 import os
@@ -36,8 +37,12 @@ logging.basicConfig(filename='example.log', level=logging.INFO)
 
 
 def temp_name(s):
-    return os.path.join(tempfile.gettempdir(), str(os.getpid()) + s)
-
+    name = os.path.join(tempfile.gettempdir(), str(os.getpid()) + s)
+    if os.path.exists(name):
+        os.remove(name)
+    if ' ' in name:
+        raise ValueError('Things will fall apart if temp files have spaces in them: %r' % name)
+    return name
 
 def write(data):
     sys.stdout.write(data)
@@ -171,9 +176,11 @@ def run(argv):
                terminal_output_lock=terminal_output_lock)
 
 
-def run_with_listeners(args):
-    save_addr = temp_name('save')
-    restore_addr = temp_name('restore')
+def run_with_listeners(args, save_addr=None, restore_addr=None):
+    if save_addr is None:
+        save_addr = temp_name('save')
+    if restore_addr is None:
+        restore_addr = temp_name('restore')
     listeners = [set_up_listener(save, save_addr),
                  set_up_listener(restore, restore_addr)]
     os.environ["RLUNDO_SAVE"] = save_addr
@@ -182,5 +189,11 @@ def run_with_listeners(args):
 
 
 if __name__ == '__main__':
-    run_with_listeners(sys.argv[1:] if sys.argv[1:] else [
-                       'python', '-c', "while True: raw_input('>')"])
+    parser = argparse.ArgumentParser(description="Run a command in a pty, saving and restoring the terminal state")
+    parser.add_argument('--save-addr', action='store', default=None)
+    parser.add_argument('--restore-addr', action='store', default=None)
+    parser.add_argument('command', nargs='*')
+    args = parser.parse_args()
+    if args.command == []:
+        args.command = ['python', '-c', "while True: raw_input('>')"]
+    run_with_listeners(args.command, save_addr=args.save_addr, restore_addr=args.restore_addr)
