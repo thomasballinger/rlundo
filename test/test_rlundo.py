@@ -137,7 +137,7 @@ class TestUndoableIpythonWithTmux(unittest.TestCase):
     # @unittest.skip("skip")
     def test_simple(self):
         """Test sending commands and reading formatted output with tmux."""
-        with ActualUndo(80, 30) as t:
+        with ActualUndo(70, 20) as t:
             tmux.send_command(t, 'ipy', prompt=IPyPrompt.in_formatted(1), maxtime=4)
             tmux.send_command(t, 'a = 1', prompt=IPyPrompt.in_formatted(2))
             tmux.send_command(t, 'a', prompt=IPyPrompt.in_formatted(3))
@@ -159,7 +159,7 @@ class TestUndoableIpythonWithTmux(unittest.TestCase):
     # @unittest.skip("skip")
     def test_undo_simple(self):
         """Test undoing one liner command in ipython."""
-        with ActualUndo(80, 30) as t:
+        with ActualUndo(70, 20) as t:
 
             # type some commands
             tmux.send_command(t, 'ipy', prompt=IPyPrompt.in_formatted(1), maxtime=4)
@@ -181,7 +181,7 @@ class TestUndoableIpythonWithTmux(unittest.TestCase):
     # @unittest.skip("skip")
     def test_undo_multiple_input_lines(self):
         """Test undoing a line of a multiple lines command in ipython."""
-        with ActualUndo(80, 30) as t:
+        with ActualUndo(70, 20) as t:
 
             # type some commands
             tmux.send_command(t, 'ipy', prompt=IPyPrompt.in_formatted(1), maxtime=4)

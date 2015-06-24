@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-import ast
 import os
 import re
 import socket
@@ -169,7 +168,7 @@ class TestRunWithTmux(unittest.TestCase):
                              ['$ python rewrite.py', '>'])
 
     def test_simple_save_and_restore(self):
-        with TmuxPaneWithAddrsInEnv(80, 10) as t:
+        with TmuxPaneWithAddrsInEnv(70, 10) as t:
             tmux.send_command(t, 'python rewrite.py --save-addr $SAVE --restore-addr $RESTORE', prompt=u'>')
             self.assertEqual(tmux.visible(t), ['$python rewrite.py --save-addr $SAVE --restore-addr $RESTORE', '>'])
             self.assertEqual(tmux.cursor_pos(t), (1, 1))
@@ -244,7 +243,7 @@ class TestRunWithTmux(unittest.TestCase):
         or cursor position to know that we've run out of space.
         I think we don't need an emulator yet - just cursor querying should do.
         """
-        with TmuxPaneWithAddrsInEnv(60, 3) as t:
+        with TmuxPaneWithAddrsInEnv(70, 3) as t:
             tmux.send_command(t, 'python rewrite.py --save-addr $SAVE --restore-addr $RESTORE', prompt=u'>')
             save()
             self.assertEqual(tmux.visible(t), ['$python rewrite.py --save-addr $SAVE --restore-addr $RESTORE', '>'])
@@ -439,7 +438,7 @@ class UndoScenario(tmux.TmuxPane):
             termstate.history_height - len(tmux.scrollback(pane)) +
             termstate.height - row - 1)
         assert additional_required_blank_rows >= 0
-        assert col == len(line) % termstate.width  # TODO allow other columns
+        assert col == len(line) % termstate.width, 'col: %r len(line): %r termstate.width: %r' % (col, len(line), termstate.width)  # TODO allow other columns
         if additional_required_blank_rows == 1:
             pane.cmd('1c'+str(col))
             pane.enter()

@@ -16,7 +16,7 @@ matrix:
         - python: "pypy"
 
 install:
-    - "pip install blessings==1.6 termcast-client==0.1.3 tmuxp==0.8.1 ipython"
+    - "pip install blessings==1.6 termcast-client==0.1.3 tmuxp==0.8.1 ipython nose==1.3.7"
 
 script:
-    - nosetests test
+    - ./.travis.script.sh

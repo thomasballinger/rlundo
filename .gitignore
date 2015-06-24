@@ -9,7 +9,6 @@ Makefile
 *.out
 *.tar.gz
 
-rlundo
 rlundolibpath
 testrlundoable
 rlundopatched

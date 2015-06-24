@@ -173,8 +173,6 @@ class TmuxPane(object):
             self.session = self.server.sessions[0]
         except tmuxp.exc.TmuxpException:
             self.session = self.server.new_session()
-        self.server.cmd('set', 'automatic-rename', 'on')
-        self.server.cmd('set', '-u', 'automatic-rename-format')
 
         self.window = self.session.new_window(attach=False)
         try:
@@ -185,8 +183,10 @@ class TmuxPane(object):
             pane.cmd('split-window', '-v', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
             if self.width is not None:
                 pane.set_width(self.width)
+                wait_for_width(pane, self.width)
             if self.height is not None:
                 pane.set_height(self.height)
+                wait_for_height(pane, self.height)
             wait_for_prompt(pane)
             return pane
         except:

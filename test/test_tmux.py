@@ -115,3 +115,8 @@ class TestTmux(unittest.TestCase):
                              [' 1234', '56789', '$'])
             tmux.stepwise_resize_width(t, 20)
             tmux.stepwise_resize_height(t, 20)
+
+    def test_initial_size(self):
+        with tmux.TmuxPane(70, 3) as t:
+            self.assertEqual(tmux.width(t), 70)
+            self.assertEqual(tmux.height(t), 3)
