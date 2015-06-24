@@ -9,10 +9,12 @@ import unittest
 
 import nose
 
-import terminal_dsl
-import tmux
-import rewrite
-import scenarioscript
+from . import terminal_dsl
+from . import tmux
+from . import scenarioscript
+
+from context import rlundo
+from rlundo import termrewrite
 
 
 def save():
@@ -50,7 +52,7 @@ class DiagramsWithTmux(object):
                 actual = terminal_dsl.TerminalState.from_tmux_pane(t)
                 self.assertEqual(after, actual, after.visible_diff(actual))
                 self.assertEqual(tmux.all_contents(t),
-                                 rewrite.linesplit(after.lines, after.width))
+                                 termrewrite.linesplit(after.lines, after.width))
 
     def resize(self, before, after, t):
         tmux.stepwise_resize_width(t, after.width)
@@ -131,55 +133,10 @@ class TestDiagramsWithTmux(unittest.TestCase, DiagramsWithTmux):
         ''')
 
 
-class TestRewriteHelpers(unittest.TestCase):
-    def test_history(self):
-        self.assertEqual(rewrite.history(
-                         ['>>> print("hello\\n"*3)\nhello\nhello\nhello\n',
-                          '>>> 1 + 1\n2\n',
-                          '>>> ']),
-                         ['>>> print("hello\\n"*3)',
-                          'hello',
-                          'hello',
-                          'hello',
-                          '>>> 1 + 1',
-                          '2',
-                          '>>> '])
-
-    def test_count_lines(self):
-        self.assertEqual(rewrite.count_lines(b"1234\n123456", 4), 2)
-        self.assertEqual(rewrite.count_lines(b"1234\n123456", 10), 1)
-        self.assertEqual(rewrite.count_lines(b"> undo\r\n> 1\r\n1\r\n", 10), 3)
-        self.assertEqual(rewrite.count_lines(b"\x01\x1b[0;32m\x02In [\x01\x1b[1;32m\x021\x01\x1b[0;32m\x02]: 1\n\x01\x1b[0m\x02\x1b[0;31mOut[\x1b[1;31m1\x1b[0;31m]: \x1b[0m1\n\n", 40), 3)
-        self.assertEqual(rewrite.count_lines(b'\r\n\x1b[0;32mIn [\x1b[1;32m2\x1b[0;32m]: \x1b[0mundo\x1b[0;32m   ...: \x1b[0m     \r\n\r\n', 40), 3)
-
-        with open("input_with_colours.txt", "r") as f:
-            data = ast.literal_eval('b"""'+f.read()+'"""')
-        self.assertEqual(rewrite.count_lines(data, 80), 6)
-
-    def test_linesplit(self):
-        self.assertEqual(rewrite.linesplit(["1234", "123456"], 4),
-                         ["1234", "1234", "56"])
-        self.assertEqual(rewrite.linesplit(["1234", "123456"], 10),
-                         ["1234", "123456"])
-
-    def test_visible_characters(self):
-        self.assertEqual(rewrite._visible_characters("1234"), 4)
-        self.assertEqual(rewrite._visible_characters("1234\n"), 4)
-        self.assertEqual(rewrite._visible_characters("\x1b[0;32m1234"), 4)
-        self.assertEqual(rewrite._visible_characters("\x1b[0m1234"), 4)
-
-    def test_rows_required(self):
-        self.assertEqual(rewrite._rows_required("1234", 4), 1)
-        self.assertEqual(rewrite._rows_required("1234", 3), 2)
-        self.assertEqual(rewrite._rows_required("1234", 2), 2)
-        self.assertEqual(rewrite._rows_required("1234", 1), 4)
-        self.assertEqual(rewrite._rows_required("\x1b[0;32m1234", 2), 2)
-
-
 class TmuxPaneWithAddrsInEnv(tmux.TmuxPane):
     def bash_config_contents(self):
-        self.save_addr = rewrite.temp_name('save')
-        self.restore_addr = rewrite.temp_name('restore')
+        self.save_addr = termrewrite.temp_name('save')
+        self.restore_addr = termrewrite.temp_name('restore')
         os.environ['RLUNDO_SAVE'] = self.save_addr
         os.environ['RLUNDO_RESTORE'] = self.restore_addr
         return """
@@ -194,7 +151,7 @@ class TestRunWithTmux(unittest.TestCase):
         with tmux.TmuxPane(40, 10) as t:
             tmux.send_command(t, 'true 1234')
             tmux.send_command(t, 'true 1234')
-            program = "import findcursor, sys; print(findcursor.get_cursor_position(sys.stdout, sys.stdin))"
+            program = "from rlundo import findcursor; import sys; print(findcursor.get_cursor_position(sys.stdout, sys.stdin))"
             tmux.send_command(t, 'python -c "%s"' % (program, ))
             lines = tmux.visible(t)
             while lines[-1] == u'$':
@@ -393,8 +350,8 @@ class UndoScenario(tmux.TmuxPane):
     Final line must have a cursor on it.
     """
     def bash_config_contents(self):
-        save_addr = rewrite.temp_name('save')
-        restore_addr = rewrite.temp_name('restore')
+        save_addr = termrewrite.temp_name('save')
+        restore_addr = termrewrite.temp_name('restore')
         os.environ['RLUNDO_SAVE'] = save_addr
         os.environ['RLUNDO_RESTORE'] = restore_addr
         return """

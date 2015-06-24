@@ -101,15 +101,6 @@ def patch_ipython():
         lambda self: raw_input_original, lambda self, x: None)
 
 
-def rl_is_ipython(rl_path):
-    """Check if the terminal to be opened is ipython.
-
-    Args:
-        rl_path: Path of interpreter being called.
-    """
-    return os.path.basename(rl_path) == "ipython"
-
-
 def start_undoable_ipython(args=None):
     """Start an undoable instance of ipython.
 

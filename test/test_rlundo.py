@@ -60,8 +60,8 @@ class ActualUndo(tmux.TmuxPane):
         python_env = sys.executable
         return """
         export PS1='$'
-        alias irb="python rlundo.py /usr/bin/irb"
-        alias ipy="{} rlundo.py ipython -i {}"
+        alias irb="python rlundo /usr/bin/irb"
+        alias ipy="{} rlundo ipython -i {}"
         """.format(python_env, self.ipython_startup.name)
 
     def ipython_config_contents(self):

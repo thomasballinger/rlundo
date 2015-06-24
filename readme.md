@@ -6,8 +6,8 @@ rlundo grants interactive interpreters magical undo powers!
 Some interpreters work without requiring compiling
 a new readline library:
 
-    $ python rlundo.py python
-    $ python rlundo.py ipython
+    $ python rlundo python
+    $ python rlundo ipython
 
 You can undo using ctrl+c
 
@@ -15,7 +15,7 @@ You can undo using ctrl+c
 
 The goal is for this to work with any interpreter, as in
 
-    $ python rlundo.py /usr/bin/irb
+    $ python rlundo /usr/bin/irb
 
 ![rlundo preview example](http://ballingt.com/assets/rlundopreview.gif)
 
@@ -34,7 +34,7 @@ There are three major parts to this project:
 
 try it with 
 
-    $ python rlundo.py /usr/bin/irb
+    $ python rlundo /usr/bin/irb
 
 
 ##rewrite.py

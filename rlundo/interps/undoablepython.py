@@ -112,12 +112,9 @@ class ForkUndoConsole(code.InteractiveConsole):
         return readline(prompt)
 
 
-def rl_is_python(rl_path):
-    return os.path.basename(rl_path) == "python"
-
-
 def start_undoable_python(args=None):
     print('running with pid %r' % (os.getpid(),))
+
     console = ForkUndoConsole()
     global save
     global restore
