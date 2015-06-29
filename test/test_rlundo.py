@@ -22,7 +22,7 @@ import unittest
 import nose
 import sys
 
-import tmux
+from . import tmux
 
 
 class ActualUndo(tmux.TmuxPane):
@@ -74,8 +74,8 @@ class ActualUndo(tmux.TmuxPane):
 
         >>> with ActualUndo(30, 10) as t:
         ...     tmux.send_command(t, 'echo hello')
-        ...     print(tmux.visible_after_prompt(t, expected=u'$'))
-        [u'$echo hello', u'hello', u'$']
+        ...     tmux.visible_after_prompt(t, expected=u'$') == ['$echo hello', 'hello', '$']
+        True
         """
         self.ipython_startup = self.tempfile(self.ipython_config_contents(), suffix='.ipy')
         return tmux.TmuxPane.__enter__(self)
@@ -128,6 +128,7 @@ class IPyPrompt(object):
         return u'   ...:'
 
 
+@unittest.skipIf(sys.version_info[0] == 3, "IPython interpreter doesn't work with Ipython 3")
 class TestUndoableIpythonWithTmux(unittest.TestCase):
 
     """Use ActualUndo and tmux to send commands to an IPython repl and check

@@ -1,6 +1,6 @@
 import sys
 import os
-from subprocess import Popen, PIPE
+from subprocess import Popen
 
 
 def modify_env_with_modified_rl():

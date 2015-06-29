@@ -1,4 +1,4 @@
-from terminal_dsl import TerminalState, parse_term_state, horzcat
+from .terminal_dsl import TerminalState, parse_term_state, horzcat
 import unittest
 
 

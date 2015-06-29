@@ -12,7 +12,7 @@ from . import terminal_dsl
 from . import tmux
 from . import scenarioscript
 
-from context import rlundo
+from .context import rlundo
 from rlundo import termrewrite
 
 
@@ -380,10 +380,11 @@ class UndoScenario(tmux.TmuxPane):
         >>> UndoScenario.validate_termstate(termstate)
         Traceback (most recent call last):
             ...
-        ValueError: termstate doesn't start with a call to rw: u'>a'
+        ValueError: termstate doesn't start with a call to rw: '>a'
         """
+        uless_repr = lambda x: repr(x)[1:] if repr(x).startswith('u') else repr(x)
         if not termstate.lines[0] == '$rw':
-            raise ValueError("termstate doesn't start with a call to rw: %r" % (termstate.lines[0], ))
+            raise ValueError("termstate doesn't start with a call to rw: %s" % (uless_repr(termstate.lines[0]), ))
         if not termstate.cursor_line == len(termstate.lines) - 1:
             raise ValueError("cursor not on last line!")
 
@@ -397,8 +398,8 @@ class UndoScenario(tmux.TmuxPane):
         ...     cursor_offset=1, width=10, height=10, history_height=0)
         >>> with UndoScenario(termstate) as t:
         ...     UndoScenario.initialize(t, termstate)
-        ...     print(tmux.visible_after_prompt(t, expected=u'>'))
-        [u'$rw', u'>a', u'b', u'c', u'>d', u'e', u'>']
+        ...     tmux.visible_after_prompt(t, expected=u'>') == [u'$rw', u'>a', u'b', u'c', u'>d', u'e', u'>']
+        True
         """
         self.python_script = self.tempfile(self.python_script_contents())
         return tmux.TmuxPane.__enter__(self)

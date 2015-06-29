@@ -15,8 +15,8 @@ import time
 
 import blessings
 
-import pity
-from findcursor import get_cursor_position
+from . import pity
+from .findcursor import get_cursor_position
 
 # version 1: record sequences, guess how many lines to go back up
 terminal = blessings.Terminal()
@@ -55,15 +55,15 @@ def save():
 
 def count_lines(msg, width):
     """Number of lines msg would move cursor down at a terminal width"""
-    resized_lines = [_rows_required(line, width) for line in msg.split('\n')]
+    resized_lines = [_rows_required(line, width) for line in msg.split(b'\n')]
     num_lines = sum(resized_lines) - 1
     return num_lines
 
 
 def _visible_characters(line):
     """Number of characters in string without color escape characters."""
-    line_without_colours = re.sub("\x1b[[]0(;\d\d)?m", "", line)
-    line_without_colours = line_without_colours.strip("\n")
+    line_without_colours = re.sub(b"\x1b[[]0(;\d\d)?m", b"", line)
+    line_without_colours = line_without_colours.strip(b"\n")
     return len(line_without_colours)
 
 
@@ -119,8 +119,8 @@ def _restore():
             write(terminal.move_up)
         middle = terminal.height // 2
 
-        for line in history(''.join(outputs))[:-1][-middle:]:
-            write(line + '\r\n')
+        for line in history(outputs)[:-1][-middle:]:
+            write(line + b'\r\n')
 
     else:
         logger.debug('moving cursor %d lines up for %r' % (n, lines))

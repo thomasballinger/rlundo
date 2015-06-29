@@ -10,7 +10,7 @@ import threading
 import tty
 import logging
 logging.basicConfig(filename='debug.log', level=logging.INFO)
-from termhelpers import Nonblocking
+from .termhelpers import Nonblocking
 
 class TerminalLock(object):
     """Lock that can be over-released

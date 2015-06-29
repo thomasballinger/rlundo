@@ -122,7 +122,7 @@ def start_undoable_python(args=None):
         save = partial(connect_and_wait_for_close, addr=os.environ['RLUNDO_SAVE'])
         restore = partial(connect_and_wait_for_close, addr=os.environ['RLUNDO_RESTORE'])
     except KeyError:
-        print sorted(os.environ.keys())
+        print(sorted(os.environ.keys()))
         raise
 
 

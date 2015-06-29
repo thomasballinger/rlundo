@@ -20,7 +20,6 @@ A diagram looks like this:
 """
 from __future__ import print_function
 
-import unittest
 import re
 from collections import namedtuple
 
@@ -108,7 +107,7 @@ class TerminalState(_TerminalStateBase):
 
     @classmethod
     def from_tmux_pane(cls, pane):
-        import tmux
+        from . import tmux
         lines = tmux.all_lines(pane)
         history_height = len(tmux.scrollback(pane))
         print('tmux.all_contents:', tmux.all_contents(pane))
@@ -309,7 +308,3 @@ def parse_term_state(s):
 # * does xterm have a difference between spaces and nothing?
 # * does xterm do cursor at bottom scroll up differently?
 # * can xterm ever have a clear space at bottom but history
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()

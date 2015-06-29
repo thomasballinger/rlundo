@@ -4,22 +4,22 @@ import ast
 import os
 import unittest
 
-from context import rlundo
+from .context import rlundo
 from rlundo import termrewrite
 
 class TestRewriteHelpers(unittest.TestCase):
     def test_history(self):
         self.assertEqual(termrewrite.history(
-                         ['>>> print("hello\\n"*3)\nhello\nhello\nhello\n',
-                          '>>> 1 + 1\n2\n',
-                          '>>> ']),
-                         ['>>> print("hello\\n"*3)',
-                          'hello',
-                          'hello',
-                          'hello',
-                          '>>> 1 + 1',
-                          '2',
-                          '>>> '])
+                         [b'>>> print("hello\\n"*3)\nhello\nhello\nhello\n',
+                          b'>>> 1 + 1\n2\n',
+                          b'>>> ']),
+                         [b'>>> print("hello\\n"*3)',
+                          b'hello',
+                          b'hello',
+                          b'hello',
+                          b'>>> 1 + 1',
+                          b'2',
+                          b'>>> '])
 
     def test_count_lines(self):
         self.assertEqual(termrewrite.count_lines(b"1234\n123456", 4), 2)
@@ -39,14 +39,14 @@ class TestRewriteHelpers(unittest.TestCase):
                          ["1234", "123456"])
 
     def test_visible_characters(self):
-        self.assertEqual(termrewrite._visible_characters("1234"), 4)
-        self.assertEqual(termrewrite._visible_characters("1234\n"), 4)
-        self.assertEqual(termrewrite._visible_characters("\x1b[0;32m1234"), 4)
-        self.assertEqual(termrewrite._visible_characters("\x1b[0m1234"), 4)
+        self.assertEqual(termrewrite._visible_characters(b"1234"), 4)
+        self.assertEqual(termrewrite._visible_characters(b"1234\n"), 4)
+        self.assertEqual(termrewrite._visible_characters(b"\x1b[0;32m1234"), 4)
+        self.assertEqual(termrewrite._visible_characters(b"\x1b[0m1234"), 4)
 
     def test_rows_required(self):
-        self.assertEqual(termrewrite._rows_required("1234", 4), 1)
-        self.assertEqual(termrewrite._rows_required("1234", 3), 2)
-        self.assertEqual(termrewrite._rows_required("1234", 2), 2)
-        self.assertEqual(termrewrite._rows_required("1234", 1), 4)
-        self.assertEqual(termrewrite._rows_required("\x1b[0;32m1234", 2), 2)
+        self.assertEqual(termrewrite._rows_required(b"1234", 4), 1)
+        self.assertEqual(termrewrite._rows_required(b"1234", 3), 2)
+        self.assertEqual(termrewrite._rows_required(b"1234", 2), 2)
+        self.assertEqual(termrewrite._rows_required(b"1234", 1), 4)
+        self.assertEqual(termrewrite._rows_required(b"\x1b[0;32m1234", 2), 2)

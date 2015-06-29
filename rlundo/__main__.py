@@ -8,11 +8,16 @@ Start a repl with undo feature.
 
 from __future__ import unicode_literals
 import sys
+import os
 
-from rlundoable import modify_env_with_modified_rl
-from termrewrite import run_with_listeners
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import rlundo
 
-import interps
+from rlundo.rlundoable import modify_env_with_modified_rl
+from rlundo.termrewrite import run_with_listeners
+
+from rlundo import interps
+
 
 def start_undoable_rl(args):
     for command, predicate in interps.interpreters:

@@ -2,8 +2,8 @@ from __future__ import unicode_literals
 
 import unittest
 
-import tmux
-import terminal_dsl
+from . import tmux
+from . import terminal_dsl
 
 
 class TestTmuxPaneInfo(unittest.TestCase):
