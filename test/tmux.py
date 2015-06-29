@@ -1,4 +1,5 @@
 from functools import partial
+import os
 import sys
 import tempfile
 import time
@@ -143,10 +144,16 @@ def send_command(pane, cmd, enter=True, prompt=u'$', maxtime=2):
 
 
 class TmuxPane(object):
-    def __init__(self, width=None, height=None):
+    def __init__(self, width=None, height=None, use_existing_session=None):
         self.width = width
         self.height = height
         self.tempfiles_to_close = []
+        if use_existing_session is not None:
+            self.use_existing_session = use_existing_session
+        elif 'RLUNDO_USE_EXISTING_TMUX_SESSION' in os.environ:
+            self.use_existing_session = True
+        else:
+            self.use_existing_session = False
 
     def tmux_config_contents(self):
         return """"""
@@ -169,16 +176,26 @@ class TmuxPane(object):
         self.bash_config = self.tempfile(self.bash_config_contents())
 
         self.server = tmuxp.Server()
-        try:
-            self.session = self.server.sessions[0]
-        except tmuxp.exc.TmuxpException:
-            self.session = self.server.new_session()
+        if self.use_existing_session:
+            try:
+                session_dict = self.server.attached_sessions()  # until tmuxp bug is fixed
+                if session_dict is None:
+                    raise tmuxp.exc.TmuxpException
+                self.session = tmuxp.Session(self.server, **session_dict[0])
+            except tmuxp.exc.TmuxpException:
+                self.session = self.server.new_session(session_name='rlundotesting')
+        else:
+            self.session = self.server.new_session(session_name='rlundotesting', kill_session=True)
 
         self.window = self.session.new_window(attach=False)
         try:
-            self.window.cmd('respawn-pane', '-k', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
+            output = self.window.panes[0].cmd('respawn-pane', '-k', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
+            if output.stderr:
+                raise ValueError(repr(output.stderr) + " " +  repr(self.window.panes))
             (pane, ) = self.window.panes
-            self.window.cmd('respawn-pane', '-k', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
+            output = pane.cmd('respawn-pane', '-k', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
+            if output.stderr:
+                raise ValueError(repr(output.stderr) + " " +  repr(self.window.panes))
             pane.cmd('split-window', '-h', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
             pane.cmd('split-window', '-v', 'bash --rcfile %s --noprofile' % (self.bash_config.name, ))
             if self.width is not None:
