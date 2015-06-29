@@ -5,6 +5,10 @@ move_left = u'\b'
 clear_eol = u'\x1b[K'
 clear_eos = u'\x1b[J'
 
+py2 = sys.version_info[0] == 2
+if py2:
+    input = raw_input
+
 
 def make_blank_line_below(n):
     "Move cursor back to prev spot after hitting return"
@@ -36,9 +40,9 @@ def move_cursor_up_and_over_and_clear(n):
 
 def dispatch(prompt=None):
     if prompt:
-        inp = raw_input(prompt)
+        inp = input(prompt)
     else:
-        inp = raw_input()
+        inp = input()
     if inp.startswith('1c'):
         make_blank_line_below(int(inp[2:]))
     elif inp == 'up2':
