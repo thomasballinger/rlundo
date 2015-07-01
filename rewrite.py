@@ -9,5 +9,5 @@ if __name__ == '__main__':
     parser.add_argument('command', nargs='*')
     args = parser.parse_args()
     if args.command == []:
-        args.command = ['python', '-c', "while True: raw_input('>')"]
+        args.command = ['python', '-c', "while True: (raw_input if '' == b'' else input)('>')"]
     run_with_listeners(args.command, save_addr=args.save_addr, restore_addr=args.restore_addr)
