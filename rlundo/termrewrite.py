@@ -55,15 +55,15 @@ def save():
 
 def count_lines(msg, width):
     """Number of lines msg would move cursor down at a terminal width"""
-    resized_lines = [_rows_required(line, width) for line in msg.split(b'\n')]
+    resized_lines = [_rows_required(line, width) for line in msg.split(u'\n')]
     num_lines = sum(resized_lines) - 1
     return num_lines
 
 
 def _visible_characters(line):
     """Number of characters in string without color escape characters."""
-    line_without_colours = re.sub(b"\x1b[[]0(;\d\d)?m", b"", line)
-    line_without_colours = line_without_colours.strip(b"\n")
+    line_without_colours = re.sub(u"\x1b[[]0(;\d\d)?m", u"", line)
+    line_without_colours = line_without_colours.strip(u"\n")
     return len(line_without_colours)
 
 
