@@ -57,7 +57,7 @@ to restore previous terminal states
 
 * clone the repo, create a virtual environment
 * pip install nose
-* somehow install a recent version of tmux, 1.9a seems to work (on OSX brew 
+* install tmux 2.0
 * `nosetests tests` in the root directory
 * try `RLUNDO_USE_EXISTING_TMUX_SESSION=1 nosetests tests` while you have a tmux
   session open to watch the tests which use tmux run
