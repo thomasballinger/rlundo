@@ -1,5 +1,5 @@
 language: python
-
+sudo: true
 before_install:
   - ./.travis.tmux.sh
 
