@@ -17,3 +17,6 @@ readline-6.3
 modified-readline-6.3
 *.egg-info
 *.pyc
+
+.noseids
+*.log

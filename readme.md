@@ -32,14 +32,14 @@ There are three major parts to this project:
 
 ##rlundoable
 
-try it with 
+try it with
 
     $ python rlundo /usr/bin/irb
 
 
 ##rewrite.py
 
-try it with 
+try it with
 
     $ python rewrite.py
 
@@ -62,6 +62,17 @@ to restore previous terminal states
 * try `RLUNDO_USE_EXISTING_TMUX_SESSION=1 nosetests tests` while you have a tmux
   session open to watch the tests which use tmux run
 
+
+---
+
+Thanks to
+
+* John Hergenroeder for help with fixing race conditions with terminal
+  rewriting
+* John Connor for discussion and Python 3 fixes
+* Agustín Benassi for ipython support, improved terminal rewriting, memory
+  monitoring work and much more
+* Joe Jean for work on Travis tests
 
 ---
 
