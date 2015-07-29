@@ -1,4 +1,4 @@
-/* 
+/*
  * A version of readline function that intercepts
  * calls to it and forks.
 */
@@ -13,7 +13,7 @@
 
 #ifdef __APPLE__
   #include <sys/wait.h>
-#else 
+#else
   #include <wait.h>
 #endif
 
@@ -37,7 +37,7 @@ static char* (*get_original_readline())(const char*){
       printf("dl error: %s\n", dlerror());
       exit(0);
     }
-  #else 
+  #else
     orig_readline = dlsym(RTLD_NEXT, "readline");
   #endif
     return orig_readline;
@@ -67,7 +67,7 @@ char* readline(const char *prompt){
   }
   if(!strcmp(value, "undo")){
     printf("undoing '%s'\n", last_command);
- 
+
     free(last_command);
     exit(42);
   }
@@ -103,7 +103,7 @@ int main(){
    while (1){
      depth++;
      line = readline("enter a string: ");  // readline allocates space for returned string
-     if(line != NULL) { 
+     if(line != NULL) {
          printf("You entered: %s\n", line);
          printf("depth: %d\n", depth);
          free(line);   // but you are responsible for freeing the space
