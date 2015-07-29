@@ -2,6 +2,6 @@
 set -e
 set -x
 
-wget https://github.com/tmux/tmux/releases/download/1.9a/tmux-1.9a.tar.gz
-tar -xzvf tmux-1.9a.tar.gz
-cd tmux-1.9a.tar.gz && ./authgen.sh && make && ./configure && sudo make install
+wget https://s3.amazonaws.com/tmux/tmux
+chmod +x tmux
+sudo mv tmux /usr/local/bin
