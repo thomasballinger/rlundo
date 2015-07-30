@@ -74,6 +74,7 @@ Thanks to
 * Agustín Benassi for ipython support, improved terminal rewriting, memory
   monitoring work and much more
 * Joe Jean for work on Travis tests
+* Madelyn Freed for work on the exectuable rlundo script
 
 ---
 
