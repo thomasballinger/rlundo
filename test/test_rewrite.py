@@ -7,6 +7,7 @@ import time
 import unittest
 
 import nose
+from flaky import flaky
 
 from . import terminal_dsl
 from . import tmux
@@ -61,6 +62,7 @@ class DiagramsWithTmux(object):
         return (len(s1.lines) > len(s2.lines) or
                 s1.lines.count('>undo') > s2.lines.count('>undo'))
 
+@flaky
 class TestDiagramsWithTmux(unittest.TestCase, DiagramsWithTmux):
     def test_simple_undo(self):
         self.assert_undo('''
