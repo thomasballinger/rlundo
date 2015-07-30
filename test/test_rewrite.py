@@ -61,7 +61,6 @@ class DiagramsWithTmux(object):
         return (len(s1.lines) > len(s2.lines) or
                 s1.lines.count('>undo') > s2.lines.count('>undo'))
 
-
 class TestDiagramsWithTmux(unittest.TestCase, DiagramsWithTmux):
     def test_simple_undo(self):
         self.assert_undo('''
@@ -146,6 +145,7 @@ class TmuxPaneWithAddrsInEnv(tmux.TmuxPane):
 
 
 class TestRunWithTmux(unittest.TestCase):
+
     def test_cursor_query(self):
         with tmux.TmuxPane(40, 10) as t:
             tmux.send_command(t, 'true 1234')

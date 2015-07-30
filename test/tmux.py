@@ -5,8 +5,17 @@ import tempfile
 import time
 
 import tmuxp
+import blessings
 
 py2 = sys.version_info.major == 2
+
+
+def assert_terminal_wide_enough(width=70):
+    term = blessings.Terminal()
+    required_width = width + 3
+    msg = ("Terminal is too narrow. "
+           "Please make it %s columns or wider and rerun tests." % width)
+    assert term.width >= required_width, msg
 
 
 def all_contents(pane):
@@ -56,7 +65,7 @@ def wait_for_condition(pane, final, query, condition=lambda x, y: x == y,
     t0 = time.time()
     while True:
         if time.time() > t0 + max:
-            raise ValueError("contition was never true within max time: cond(%r, %r)" % (last, final))
+            raise ValueError("condition was never true within max time: cond(%r, %r)" % (last, final))
         last = query(pane)
         if condition(last, final):
             break
@@ -147,6 +156,7 @@ class TmuxPane(object):
     def __init__(self, width=None, height=None, use_existing_session=None):
         self.width = width
         self.height = height
+        assert_terminal_wide_enough(width)
         self.tempfiles_to_close = []
         if use_existing_session is not None:
             self.use_existing_session = use_existing_session

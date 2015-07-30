@@ -117,6 +117,7 @@ class TestTmux(unittest.TestCase):
             tmux.stepwise_resize_height(t, 20)
 
     def test_initial_size(self):
+        tmux.assert_terminal_wide_enough(70)
         with tmux.TmuxPane(70, 3) as t:
             self.assertEqual(tmux.width(t), 70)
             self.assertEqual(tmux.height(t), 3)
