@@ -120,7 +120,7 @@ def _restore():
         middle = terminal.height // 2
 
         for line in history(outputs)[:-1][-middle:]:
-            write(line + b'\r\n')
+            write((line + b'\r\n').decode('utf8'))
 
     else:
         logger.debug('moving cursor %d lines up for %r' % (n, lines))

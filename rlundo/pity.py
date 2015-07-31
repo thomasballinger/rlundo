@@ -108,7 +108,7 @@ def _copy(master_fd, master_read=pty._read, stdin_read=pty._read,
                 try:
                     data = stdin_read(STDIN_FILENO)
                 except OSError as e:
-                    if e[0] != errno.EAGAIN:
+                    if e.errno != errno.EAGAIN:
                         raise
                 else:
                     if not data:

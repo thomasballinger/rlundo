@@ -245,6 +245,7 @@ class TestRunWithTmux(unittest.TestCase):
         or cursor position to know that we've run out of space.
         I think we don't need an emulator yet - just cursor querying should do.
         """
+        self.maxDiff = None
         with TmuxPaneWithAddrsInEnv(70, 3) as t:
             tmux.send_command(t, 'python rewrite.py --save-addr $SAVE --restore-addr $RESTORE', prompt=u'>')
             save()
