@@ -49,7 +49,7 @@ def _inner_get_cursor_position(to_terminal, from_terminal):
                     raise ValueError("Stream should be blocking - should't"
                                      " return ''. Returned %r so far", (resp,))
                 return c
-            except IOError:
+            except IOError as e:
                 raise ValueError('cursor get pos response read interrupted: %r' % (resp, ))
 
     resp = ''

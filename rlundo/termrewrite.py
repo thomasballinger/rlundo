@@ -90,14 +90,16 @@ def restore():
     with terminal_output_lock:
         _restore()
 
+
 def _restore():
+    """Clears the current line and as many lines above as needed?"""
     logger.debug('full output stack: %r' % (outputs, ))
     lines_between_saves = outputs.pop() if outputs else ''
     lines_after_save = outputs.pop() if outputs else ''
     lines = lines_between_saves + lines_after_save
     logger.info('lines to rewind: %r' % (lines, ))
     n = count_lines(lines.decode(encoding), terminal.width)
-    logger.info('numer of lines to rewind %d' % (n, ))
+    logger.info('number of lines to rewind %d' % (n, ))
     with stdin_lock:
         lines_available, _ = get_cursor_position(sys.stdout, sys.stdin)
     logger.debug('lines move: %d lines_available: %d' % (n, lines_available))
