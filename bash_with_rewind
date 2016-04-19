@@ -1,0 +1,5 @@
+#! /bin/sh
+export PS1="\$(python bashrewind save)[\u@\h:\w]\$ "
+export RLUNDO_SAVE
+export RLUNDO_RESTORE
+bash --norc -i

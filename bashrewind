@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+import socket
+import sys
+import os
+from functools import partial
+
+
+def connect_and_wait_for_close(addr):
+    s = socket.socket(family=socket.AF_UNIX)
+    try:
+        s.connect(addr)
+    except ConnectionRefusedError:
+        pass
+    else:
+        assert b'' == s.recv(1024)
+
+save = partial(connect_and_wait_for_close, addr=os.environ['RLUNDO_SAVE'])
+restore = partial(connect_and_wait_for_close, addr=os.environ['RLUNDO_RESTORE'])
+
+if __name__ == '__main__':
+    if 'save' in sys.argv:
+        save()
+    else:
+        restore()
