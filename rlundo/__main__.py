@@ -3,7 +3,7 @@
 """
 rlundo
 
-Start a repl with undo feature.
+Start a repl with undo.
 """
 
 from __future__ import unicode_literals
@@ -21,12 +21,17 @@ from rlundo import interps
 
 
 def start_undoable_rl(interpreter, interparg):
+    """Run an interpreter either with an undo script or with a generic method.
+
+    If an interpreter matches the first argument, run script like that.
+    Otherwise run that command in an environment where a modified readline will
+    be used instead of the standard one."""
     for command, predicate in interps.interpreters:
         if predicate(interpreter):
             return run_with_listeners(command + interparg)
     else:
         modify_env_with_modified_rl()
-        run_with_listeners(interpreter + interparg)
+        return run_with_listeners([interpreter] + interparg)
 
 
 if __name__ == "__main__":
