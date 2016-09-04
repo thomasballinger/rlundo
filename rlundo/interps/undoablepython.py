@@ -129,6 +129,7 @@ def start_undoable_python(args=None):
     if args:
         sys.argv = args
 
+    sys.path.insert(0, '')
     console.interact()
 
 
