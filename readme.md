@@ -4,18 +4,24 @@
 
 rlundo grants interactive interpreters magical undo powers!
 
+![rlundo preview example](http://ballingt.com/assets/rlundopreview.gif)
+
 A patched version of readline is used to fork an interpreter
 at each prompt. If the user enters `undo` then that child process dies
 and execution is resume.
-
-rlundo also removes the terminal output that occured in the late child
-process, restoring the terminal to its previous state.
-
-![rlundo preview example](http://ballingt.com/assets/rlundopreview.gif)
+rlundo also removes the terminal output that occured in the recently-deceasedk
+child process, restoring the terminal to its previous state.
 
 The goal is for this to work with any interpreter:
 
-    $ python rlundo /usr/bin/irb
+    $ python rlundo irb
+
+The name rlundo is modeled off of
+[rlwrap](https://github.com/hanslub42/rlwrap), which wraps interactive
+command line interfaces with the readline editing interface. Like that
+command, rlundo wraps other interactive interfaces.
+To make the analogy work it probably should have been called undowrap, or
+rlundowrap to suggest that the undo implemented builds off of readline.
 
 ---
 
@@ -32,7 +38,9 @@ is not required for interpreters implemented this way.
 
 ##Modified Readline library
 
-rlundoable is a patched readline library with the following modification:
+rlundoable is a patched version of the gnu readline library with the following
+modifications:
+
 * calling readline causes the process to fork
 * the user entering "undo" causes the process to die
 * tcp socket connections are made when the process forks or dies to notifiy
