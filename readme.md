@@ -3,41 +3,54 @@
 #rlundo
 
 rlundo grants interactive interpreters magical undo powers!
-Some interpreters work without requiring compiling
-a new readline library:
+
+A patched version of readline is used to fork an interpreter
+at each prompt. If the user enters `undo` then that child process dies
+and execution is resume.
+
+rlundo also removes the terminal output that occured in the late child
+process, restoring the terminal to its previous state.
+
+![rlundo preview example](http://ballingt.com/assets/rlundopreview.gif)
+
+The goal is for this to work with any interpreter:
+
+    $ python rlundo /usr/bin/irb
+
+---
+
+Using a patched version of the readline library only works for interactive
+interpreters that already use readline. To address this, this project
+includes shims for various interpreters that implement undo via fork in a
+less general way in /rlundo/interps/. Compiling the patched readline library
+is not required for interpreters implemented this way.
 
     $ python rlundo python
     $ python rlundo ipython
 
-You can undo using ctrl+c
-
 ![undo with ctrl+c](http://ballingt.com/assets/undoable_ipython.gif)
 
-The goal is for this to work with any interpreter, as in
+##Modified Readline library
 
-    $ python rlundo /usr/bin/irb
+rlundoable is a patched readline library with the following modification:
+* calling readline causes the process to fork
+* the user entering "undo" causes the process to die
+* tcp socket connections are made when the process forks or dies to notifiy
+  a listener that might be recording terminal state
 
-![rlundo preview example](http://ballingt.com/assets/rlundopreview.gif)
-
-which will work if you compile the modified readline library with
+To build this patched readline library:
 
     cd rlundoable
     make -f Makefileosx
 
-There are three major parts to this project:
+Read more about the patched readline library in that [readme](rlundoable/readme.md).
 
-* rlundoable - a patch for readline that makes it fork to save state
-* rewrite.py - rewinds the terminal state to how it was at the last prompt
-* undoableINTERPRETER - alternative scripts for running specific interactive interpreters so that they have undo
+##Rewriting terminal state
 
-##rlundoable
-
-try it with
-
-    $ python rlundo /usr/bin/irb
-
-
-##rewrite.py
+In order to restore prior terminal state on undo, interpreters are run
+in a psuedoterminal that takes snapshots of terminal state when the
+interpreter forks and restores previous terminal state when an interpreter
+process dies.
 
 try it with
 
@@ -53,7 +66,8 @@ to save terminal states, and
 
 to restore previous terminal states
 
-##Running the tests
+
+#Running the tests
 
 * clone the repo, create a virtual environment
 * pip install nose
