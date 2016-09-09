@@ -20,21 +20,20 @@ The name rlundo is modeled off of
 [rlwrap](https://github.com/hanslub42/rlwrap), which wraps interactive
 command line interfaces with the readline editing interface. Like that
 command, rlundo wraps other interactive interfaces.
-To make the analogy work it probably should have been called undowrap, or
-rlundowrap to suggest that the undo implemented builds off of readline.
+To make the analogy work better it probably should have been called undowrap, or
+rlundowrap to suggest that the way undo is implemented uses readline.
 
 ---
 
 Using a patched version of the readline library only works for interactive
-interpreters that already use readline. To address this, this project
+interpreters that dynamically link readline. To address this, this project
 includes shims for various interpreters that implement undo via fork in a
 less general way in /rlundo/interps/. Compiling the patched readline library
-is not required for interpreters implemented this way.
+is not required for interpreters implemented this way. Add your favorite!
 
     $ python rlundo python
-    $ python rlundo ipython
 
-![undo with ctrl+c](http://ballingt.com/assets/undoable_ipython.gif)
+(python seems to usually statically link readline)
 
 ##Modified Readline library
 
@@ -72,7 +71,7 @@ to save terminal states, and
 
     nc localhost 4243
 
-to restore previous terminal states
+to restore previous terminal states.
 
 
 #Running the tests
@@ -118,3 +117,9 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+---
+
+    $ python rlundo ipython
+
+![undo with ctrl+c](http://ballingt.com/assets/undoable_ipython.gif)
