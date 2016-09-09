@@ -1,5 +1,3 @@
-import builtins
-
 from .. import undoreadline
 
 

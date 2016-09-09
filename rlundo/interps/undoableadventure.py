@@ -1,7 +1,5 @@
 import sys
 
-import builtins
-
 from .. import undoreadline
 
 
