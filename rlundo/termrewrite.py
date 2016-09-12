@@ -32,12 +32,22 @@ logging.basicConfig(filename='example.log', level=logging.INFO)
 
 
 def temp_name(s):
-    name = os.path.join(tempfile.gettempdir(), str(os.getpid()) + s)
+    name = os.path.join(tempfile.gettempdir(), 'rlundo' + str(os.getpid()) + s)
     if os.path.exists(name):
         os.remove(name)
     if ' ' in name:
         raise ValueError('Things will fall apart if temp files have spaces in them: %r' % name)
     return name
+
+
+class UnlinkWrapper(object):
+    def __init__(self, filename):
+        self.filename = filename
+    def __enter__(self):
+        pass
+    def __exit__(self, *args):
+        os.remove(self.filename)
+
 
 def write(data):
     sys.stdout.write(data)
@@ -173,13 +183,20 @@ def run(argv):
                terminal_output_lock=terminal_output_lock)
 
 
-def run_with_listeners(args, save_addr=None, restore_addr=None):
+def run_with_listeners(args, save_addr=None, restore_addr=None, print_addrs=False):
     if save_addr is None:
         save_addr = temp_name('save')
     if restore_addr is None:
         restore_addr = temp_name('restore')
+    if print_addrs:
+        print("save: {}\nrestore: {}".format(save_addr, restore_addr))
+        print("trigger these with nc -U <socketname>")
+        print("they have been saved in this process's envvars as")
+        print("RLUNDO_SAVE and RLUNDO_RESTORE")
     listeners = [set_up_listener(save, save_addr),
                  set_up_listener(restore, restore_addr)]
     os.environ["RLUNDO_SAVE"] = save_addr
     os.environ["RLUNDO_RESTORE"] = restore_addr
-    run(args)
+    with UnlinkWrapper(save_addr):
+        with UnlinkWrapper(restore_addr):
+            run(args)

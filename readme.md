@@ -55,7 +55,7 @@ Read more about the patched readline library in that [readme](rlundoable/readme.
 ##Rewriting terminal state
 
 In order to restore prior terminal state on undo, interpreters are run
-in a psuedoterminal that takes snapshots of terminal state when the
+in a psuedo terminal that takes snapshots of terminal state when the
 interpreter forks and restores previous terminal state when an interpreter
 process dies.
 
@@ -65,14 +65,15 @@ try it with
 
 and then in another terminal run
 
-    nc localhost 4242
+    nc -U path/to/tmp/unix/socket/*save
 
 to save terminal states, and
 
-    nc localhost 4243
+    nc -U path/tmp/tmp/unix/socket/*save; nc -U path/to/tmp/unix/socket/*restore;
 
-to restore previous terminal states.
-
+to restore previous terminal states. Restore always goes back two state, so it
+is necessary to call save before restore as shown above to restore the previous
+save.
 
 #Running the tests
 
