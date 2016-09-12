@@ -2,7 +2,8 @@
 < readline (prompt)
 ---
 > actual_readline (prompt)
-389a390,423
+388a389,422
+> 
 > char * last_command = "with no command, so exiting";
 > 
 > char *
@@ -11,11 +12,11 @@
 > {
 >   char *value;
 > 
->   system("nc localhost 4242");
+>   system("nc -U $RLUNDO_SAVE");
 >   value = actual_readline(prompt);
 >   if(!strcmp(value, "undo")){
 >     //printf("undoing '%s'\n", last_command);
->     system("nc localhost 4243");
+>     system("nc -U $RLUNDO_RESTORE");
 >     exit(42);
 >   }
 > 	pid_t pid = fork();
@@ -35,5 +36,4 @@
 >     }
 >   }
 > }
-> 
 > 

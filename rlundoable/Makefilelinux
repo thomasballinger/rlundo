@@ -28,6 +28,6 @@ patched-readline: modified-readline-6.3/shlib/libreadline.so.6.3
 
 # not included in make all - rebuild the diff based on edits to modified
 refresh-diff: readline-6.3
-	diff -u readline-6.3/readline.c modified-readline-6.3/readline.c > readline.diff
+	-diff readline-6.3/readline.c modified-readline-6.3/readline.c > readline.diff
 clean:
 	rm -rf *.so modified-readline-6.3
