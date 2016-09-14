@@ -87,7 +87,8 @@ python
 ------
 
 Python and IPython don't work yet! The readline linking story seems more
-complicated. I'd appreciate help with this!
+complicated. I'd appreciate help with this! Right now python and ipython
+use wrappers written in Python that take the place of the patched readline.
 
 ##Techniques for creating the substitute readline function
 
