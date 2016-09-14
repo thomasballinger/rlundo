@@ -6,7 +6,7 @@ rlundo grants interactive interpreters magical undo powers!
 
 ![rlundo preview example](http://ballingt.com/assets/rlundopreview.gif)
 
-For a long read about the motivation for such a tools, see [this blog
+For a long read about the motivation for such a tool, see [this blog
 post](http://ballingt.com/interactive-interpreter-undo)
 
 A patched version of readline is used to fork an interpreter
@@ -55,6 +55,11 @@ To build this patched readline library:
 
 Read more about the patched readline library in that [readme](rlundoable/readme.md).
 
+The library substitution works more reliably for me on linux right now. Maybe
+this is because homebrew more often links readline statically? That's just
+speculation. Writing workarounds for common interpreters or digging into how
+to make readline hijacking more reliable would both be really helpful!
+
 ##Rewriting terminal state
 
 In order to restore prior terminal state on undo, interpreters are run
@@ -76,7 +81,10 @@ to save terminal states, and
 
 to restore previous terminal states. Restore always goes back two state, so it
 is necessary to call save before restore as shown above to restore the previous
-save.
+save. Ordinarily these signals are sent by the modified interpreter (or the
+patched readline it calls) after printing the prompt but before the user types
+anything. Since you'll be sending the commands manually in the above demo, the
+`>` prompt will not reappear after undo.
 
 #Running the tests
 
