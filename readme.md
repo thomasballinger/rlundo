@@ -6,6 +6,9 @@ rlundo grants interactive interpreters magical undo powers!
 
 ![rlundo preview example](http://ballingt.com/assets/rlundopreview.gif)
 
+For a long read about the motivation for such a tools, see [this blog
+post](http://ballingt.com/interactive-interpreter-undo)
+
 A patched version of readline is used to fork an interpreter
 at each prompt. If the user enters `undo` then that child process dies
 and execution is resume.
