@@ -12,7 +12,7 @@ post](http://ballingt.com/interactive-interpreter-undo)
 A patched version of readline is used to fork an interpreter
 at each prompt. If the user enters `undo` then that child process dies
 and execution is resume.
-rlundo also removes the terminal output that occured in the recently-deceasedk
+rlundo also removes the terminal output that occurred in the recently-deceased
 child process, restoring the terminal to its previous state.
 
 The goal is for this to work with any interpreter:
@@ -45,7 +45,7 @@ modifications:
 
 * calling readline causes the process to fork
 * the user entering "undo" causes the process to die
-* tcp socket connections are made when the process forks or dies to notifiy
+* tcp socket connections are made when the process forks or dies to notify
   a listener that might be recording terminal state
 
 To build this patched readline library:
@@ -63,7 +63,7 @@ to make readline hijacking more reliable would both be really helpful!
 ##Rewriting terminal state
 
 In order to restore prior terminal state on undo, interpreters are run
-in a psuedo terminal that takes snapshots of terminal state when the
+in a pseudo terminal that takes snapshots of terminal state when the
 interpreter forks and restores previous terminal state when an interpreter
 process dies.
 
@@ -107,7 +107,7 @@ Thanks to
 * Agustín Benassi for ipython support, improved terminal rewriting, memory
   monitoring work and much more
 * Joe Jean for work on Travis tests
-* Madelyn Freed for work on the exectuable rlundo script
+* Madelyn Freed for work on the executable rlundo script
 
 ---
 
