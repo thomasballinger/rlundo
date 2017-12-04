@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/thomasballinger/rlundo.svg?branch=master)](https://travis-ci.org/thomasballinger/rlundo)
 
-#rlundo
+# rlundo
 
 rlundo grants interactive interpreters magical undo powers!
 
@@ -38,7 +38,7 @@ is not required for interpreters implemented this way. Add your favorite!
 
 (python seems to usually statically link readline)
 
-##Modified Readline library
+## Modified Readline library
 
 rlundoable is a patched version of the gnu readline library with the following
 modifications:
@@ -60,7 +60,7 @@ this is because homebrew more often links readline statically? That's just
 speculation. Writing workarounds for common interpreters or digging into how
 to make readline hijacking more reliable would both be really helpful!
 
-##Rewriting terminal state
+## Rewriting terminal state
 
 In order to restore prior terminal state on undo, interpreters are run
 in a psuedo terminal that takes snapshots of terminal state when the
@@ -86,7 +86,7 @@ patched readline it calls) after printing the prompt but before the user types
 anything. Since you'll be sending the commands manually in the above demo, the
 `>` prompt will not reappear after undo.
 
-#Running the tests
+# Running the tests
 
 * clone the repo, create a virtual environment
 * pip install nose
@@ -111,7 +111,7 @@ Thanks to
 
 ---
 
-##License
+## License
 
 Copyright 2015 Thomas Ballinger
 
